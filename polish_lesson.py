@@ -1,5 +1,6 @@
 import streamlit as st
 import time
+import random # Import random for shuffling
 
 # --- Page Configuration (Must be the first Streamlit command) ---
 st.set_page_config(
@@ -9,18 +10,15 @@ st.set_page_config(
 )
 
 # --- Custom CSS ---
-def local_css(file_name):
-    with open(file_name) as f:
-        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
-
 # Inject custom CSS
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Boldonse&display=swap'); /* Import Boldonse */
 
 /* --- Font --- */
 html, body, [class*="st-"], .stMarkdown {
-    font-family: 'Bodoni Moda', serif !important; /* Use Bodoni Moda */
+    font-family: 'Boldonse', serif !important; /* Use Boldonse */
+    font-weight: 400; /* Boldonse seems to have only 400 weight available typically */
 }
 
 /* --- Gradient Background with Noise and Animation --- */
@@ -44,24 +42,16 @@ body::before {
     background: linear-gradient(135deg, #1C5451, #F1EFE9, #1C5451);
     background-size: 400% 400%; /* Larger size for smoother animation */
 
-    /* Noise Texture - Subtle */
-    /* You might need to host a noise.png file or find a suitable online one */
-    /* background-image: url('your_noise_texture.png'), linear-gradient(135deg, #1C5451, #F1EFE9, #1C5451); */
-    /* background-repeat: repeat, no-repeat; */
+    /* Improved CSS Noise simulation */
+    /* Combining noise pattern with the animated gradient */
+     background-image: linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px),
+                       linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px),
+                       linear-gradient(135deg, #1C5451, #F1EFE9, #1C5451);
+     background-size: 2px 2px, 2px 2px, 400% 400%; /* Small squares for noise + gradient */
 
 
     /* Wiggle Animation */
     animation: gradientAnimation 25s ease infinite; /* Slow movement */
-
-    /* Simulate Noise with CSS if no image - less effective */
-     /* filter: contrast(150%) brightness(100%) grayscale(100%) opacity(0.05); */ /* Example filter for subtle noise */
-
-     /* Improved CSS Noise simulation */
-     background-image: linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
-                       linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px),
-                       linear-gradient(135deg, #1C5451, #F1EFE9, #1C5451);
-     background-size: 2px 2px, 2px 2px, 400% 400%; /* Small squares for noise + gradient */
-
 }
 
 
@@ -73,7 +63,8 @@ body::before {
     background-color: #FFFFFF; /* White background */
     color: #1C5451; /* Text color */
     transition: all 0.3s ease;
-    font-weight: bold;
+    font-family: 'Boldonse', serif !important; /* Ensure button uses the font */
+    font-weight: 400; /* Adjust if needed based on font availability */
     box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
 }
 
@@ -98,28 +89,35 @@ body::before {
 
 h1, h2, h3, h4, h5, h6 {
     color: #1C5451; /* Heading color */
+    font-family: 'Boldonse', serif !important; /* Ensure headings use the font */
 }
 
 .stMarkdown {
    color: #333333; /* Default text color */
    line-height: 1.6;
+   font-family: 'Boldonse', serif !important; /* Ensure markdown uses the font */
 }
 
 /* Style specific containers if needed */
 .stRadio > label, .stTextInput > label, .stSelectbox > label {
-    font-weight: bold;
+    font-weight: 400; /* Use 400 as Boldonse might not have 'bold' */
     color: #1C5451;
+    font-family: 'Boldonse', serif !important;
 }
 
 /* Feedback boxes */
 .stAlert {
     border-radius: 10px;
+    font-family: 'Boldonse', serif !important;
 }
 
 /* Improve sidebar */
 .stSidebar {
     background-color: rgba(241, 239, 233, 0.8); /* Slightly transparent sidebar */
     backdrop-filter: blur(5px);
+}
+.stSidebar .stMarkdown, .stSidebar .stButton>button {
+     font-family: 'Boldonse', serif !important;
 }
 
 
@@ -142,7 +140,7 @@ for page, emoji in zip(pages, page_emojis):
     if st.sidebar.button(f"{emoji} {page}"):
         st.session_state.page = page
         st.session_state.feedback = {} # Clear feedback when changing pages
-        st.experimental_rerun() # Rerun to show the new page immediately
+        st.rerun() # CORRECTED: Use st.rerun()
 
 # --- Page Content ---
 
@@ -173,7 +171,7 @@ if st.session_state.page == "Introduction":
     """)
     if st.button("➡️ Dalej / Siguiente: Alfabet"):
         st.session_state.page = "Alphabet"
-        st.experimental_rerun()
+        st.rerun() # CORRECTED: Use st.rerun()
 
 # == ALPHABET ==
 elif st.session_state.page == "Alphabet":
@@ -250,19 +248,23 @@ elif st.session_state.page == "Alphabet":
 
         user_choice = st.radio(f"Które słowo słyszysz? / ¿Qué palabra oyes?", options, key=q_key, index=None)
 
-        if user_choice:
+        if user_choice is not None: # Check if a choice was made
             if options.index(user_choice) == correct_index:
-                st.success("✅ Dobrze! ¡Correcto!")
+                if st.session_state.feedback[exercise_key].get(q_key) is not False: # Show success only once unless previously wrong
+                     st.success("✅ Dobrze! ¡Correcto!")
                 st.session_state.feedback[exercise_key][q_key] = True
             else:
                 st.error(f"❌ Spróbuj ponownie. La respuesta correcta era '{options[correct_index]}'. Intenta de nuevo.")
                 st.session_state.feedback[exercise_key][q_key] = False
+        else:
+            # Keep state neutral if no choice is made yet for this question
+             st.session_state.feedback[exercise_key][q_key] = None
         q_num += 1
 
 
     if st.button("➡️ Dalej / Siguiente: Słownictwo"):
         st.session_state.page = "Vocabulary & Phrases"
-        st.experimental_rerun()
+        st.rerun() # CORRECTED: Use st.rerun()
 
 
 # == VOCABULARY & PHRASES ==
@@ -324,27 +326,49 @@ elif st.session_state.page == "Vocabulary & Phrases":
         "Miło mi.": "Encantado/a.",
         "Cześć!": "¡Hola! / ¡Adiós! (Informal)"
     }
-    # Shuffle options for display
     polish_phrases = list(match_options.keys())
-    spanish_phrases = list(match_options.values())
-    # Simple display - user needs to match mentally or on paper for now
-    # For interactive matching, would need a more complex widget or logic
+    spanish_translations = list(match_options.values())
+
+    # Shuffle Spanish translations for the quiz
+    shuffled_spanish = random.sample(spanish_translations, len(spanish_translations))
+
+    user_matches = {}
     cols1 = st.columns(2)
     with cols1[0]:
         st.markdown("**Polski:**")
         for i, phrase in enumerate(polish_phrases):
-            st.write(f"{i+1}. {phrase}")
-    with cols1[1]:
-        st.markdown("**Español (desordenado):**")
-        import random
-        random.shuffle(spanish_phrases)
-        for i, phrase in enumerate(spanish_phrases):
-             st.write(f"{chr(ord('a')+i)}. {phrase}")
+            user_matches[phrase] = st.selectbox(f"{i+1}. {phrase}", [""] + shuffled_spanish , key=f"{q1_key}_{i}", index=0, label_visibility="collapsed") # Add empty option
 
-    # Correct answers reveal
-    if st.button("Pokaż odpowiedzi / Mostrar respuestas (Match)", key=f"{q1_key}_reveal"):
-         correct_matches_str = "\n".join([f"*   {p} = {match_options[p]}" for p in polish_phrases])
-         st.success(f"Poprawne dopasowania / Emparejamientos correctos:\n{correct_matches_str}")
+    with cols1[1]:
+         # Just show the Spanish options for reference; matching happens in column 1
+         st.markdown("**Opcje (Español):**")
+         for trans in shuffled_spanish:
+             st.write(f"- {trans}")
+
+
+    if st.button("Sprawdź dopasowanie / Comprobar emparejamiento", key=f"{q1_key}_check"):
+        correct_count_match = 0
+        all_correct_match = True
+        feedback_match_html = "<ul>"
+        for polish, user_spanish in user_matches.items():
+            correct_spanish = match_options[polish]
+            if user_spanish == correct_spanish:
+                feedback_match_html += f"<li>'{polish}' = '{user_spanish}' ✅</li>"
+                correct_count_match += 1
+            elif user_spanish == "":
+                 feedback_match_html += f"<li>'{polish}' = ? (Nie wybrano / No seleccionado)</li>"
+                 all_correct_match = False
+            else:
+                feedback_match_html += f"<li>'{polish}' = <span style='color:red;'>'{user_spanish}'</span> ❌ (Poprawnie / Correcto: '{correct_spanish}')</li>"
+                all_correct_match = False
+        feedback_match_html += "</ul>"
+        st.markdown(feedback_match_html, unsafe_allow_html=True)
+        if all_correct_match:
+            st.success("🎉 Wszystkie pary poprawne! / ¡Todos los pares correctos!")
+            st.session_state.feedback[exercise_key][q1_key] = True
+        else:
+            st.warning(f"Masz {correct_count_match} z {len(polish_phrases)} poprawnych par. / Tienes {correct_count_match} de {len(polish_phrases)} pares correctos.")
+            st.session_state.feedback[exercise_key][q1_key] = False
 
 
     # --- Exercise 2: Fill-in-the-blanks (from PDF p.1) ---
@@ -356,49 +380,48 @@ elif st.session_state.page == "Vocabulary & Phrases":
     dialog_template = [
         ("A", "Dzień {0}! Jak {1} się nazywa?"),
         ("B", "Dzień {2}! {3} Piotr Nowicki. Jak {4} się nazywa?"),
-        ("A", "Anna Kamińska."),
+        ("A", "Anna Kamińska."), # No blank here
         ("B", "{5} mi.")
     ]
     solution = ["dobry", "pani", "dobry", "Nazywam się", "pan", "Miło"]
-    user_inputs = {}
 
-    for i in range(len(solution)):
-        # A bit hacky to show context, Streamlit reruns make this tricky
-        # Displaying simplified context
-        speaker, text_part = None, ""
-        if i in [0, 1]: speaker, text_part = dialog_template[0]
-        elif i in [2, 3, 4]: speaker, text_part = dialog_template[1]
-        elif i == 5: speaker, text_part = dialog_template[3]
+    # Use session state to store user inputs for this exercise
+    if q2_key not in st.session_state:
+        st.session_state[q2_key] = [""] * len(solution)
 
-        if speaker:
-            placeholder = f"_{i}_"
-            context_text = text_part.format(*([placeholder]*len(solution))) # Show placeholders
-            user_inputs[i] = st.text_input(f"({speaker}): ... {placeholder} ...", key=f"{q2_key}_{i}", placeholder="Wpisz słowo / Escribe la palabra")
+    # Display inputs - simplified presentation
+    st.markdown("**Dialog:**")
+    st.session_state[q2_key][0] = st.text_input(f"A: Dzień ______! [0]", value=st.session_state[q2_key][0], key=f"{q2_key}_0")
+    st.session_state[q2_key][1] = st.text_input(f"A: ... Jak ______ się nazywa? [1]", value=st.session_state[q2_key][1], key=f"{q2_key}_1")
+    st.session_state[q2_key][2] = st.text_input(f"B: Dzień ______! [2]", value=st.session_state[q2_key][2], key=f"{q2_key}_2")
+    st.session_state[q2_key][3] = st.text_input(f"B: ... ______ Piotr Nowicki. [3]", value=st.session_state[q2_key][3], key=f"{q2_key}_3")
+    st.session_state[q2_key][4] = st.text_input(f"B: ... Jak ______ się nazywa? [4]", value=st.session_state[q2_key][4], key=f"{q2_key}_4")
+    st.text("A: Anna Kamińska.")
+    st.session_state[q2_key][5] = st.text_input(f"B: ______ mi. [5]", value=st.session_state[q2_key][5], key=f"{q2_key}_5")
 
 
     if st.button("Sprawdź odpowiedzi / Comprobar respuestas (Fill-in)", key=f"{q2_key}_check"):
         correct_count = 0
         all_correct = True
         feedback_html = ""
+        # Reconstruct dialogue with feedback
+        filled_dialog = [
+             f"A: Dzień {'<span style=\'color:green; font-weight:bold;\'>' + st.session_state[q2_key][0].strip() + '</span>' if st.session_state[q2_key][0].strip().lower() == solution[0].lower() else '<span style=\'color:red;\'>' + st.session_state[q2_key][0].strip() + '</span>' + f' ({solution[0]})'}! Jak {'<span style=\'color:green; font-weight:bold;\'>' + st.session_state[q2_key][1].strip() + '</span>' if st.session_state[q2_key][1].strip().lower() == solution[1].lower() else '<span style=\'color:red;\'>' + st.session_state[q2_key][1].strip() + '</span>' + f' ({solution[1]})'} się nazywa?",
+             f"B: Dzień {'<span style=\'color:green; font-weight:bold;\'>' + st.session_state[q2_key][2].strip() + '</span>' if st.session_state[q2_key][2].strip().lower() == solution[2].lower() else '<span style=\'color:red;\'>' + st.session_state[q2_key][2].strip() + '</span>' + f' ({solution[2]})'}! {'<span style=\'color:green; font-weight:bold;\'>' + st.session_state[q2_key][3].strip() + '</span>' if st.session_state[q2_key][3].strip().lower() == solution[3].lower() else '<span style=\'color:red;\'>' + st.session_state[q2_key][3].strip() + '</span>' + f' ({solution[3]})'} Piotr Nowicki. Jak {'<span style=\'color:green; font-weight:bold;\'>' + st.session_state[q2_key][4].strip() + '</span>' if st.session_state[q2_key][4].strip().lower() == solution[4].lower() else '<span style=\'color:red;\'>' + st.session_state[q2_key][4].strip() + '</span>' + f' ({solution[4]})'} się nazywa?",
+             "A: Anna Kamińska.",
+             f"B: {'<span style=\'color:green; font-weight:bold;\'>' + st.session_state[q2_key][5].strip() + '</span>' if st.session_state[q2_key][5].strip().lower() == solution[5].lower() else '<span style=\'color:red;\'>' + st.session_state[q2_key][5].strip() + '</span>' + f' ({solution[5]})'} mi."
+         ]
+
+        # Check correctness
         for i in range(len(solution)):
-            user_answer = user_inputs.get(i, "").strip()
-            correct_answer = solution[i]
-            speaker, text_part = None, ""
-            # Find context again (this is inefficient due to reruns)
-            if i in [0, 1]: speaker, text_part = dialog_template[0]
-            elif i in [2, 3, 4]: speaker, text_part = dialog_template[1]
-            elif i == 5: speaker, text_part = dialog_template[3]
-            # Reconstruct the line with user answers for feedback
-            line_filled = text_part.format(*(user_inputs.get(j, f"_{j}_").strip() for j in range(len(solution))))
-
-            if user_answer.lower() == correct_answer.lower():
-                 feedback_html += f"<li>({speaker}): ... <span style='color:green; font-weight:bold;'>{user_answer}</span> ... (✅)</li>"
-                 correct_count += 1
+            if st.session_state[q2_key][i].strip().lower() == solution[i].lower():
+                correct_count +=1
             else:
-                 feedback_html += f"<li>({speaker}): ... <span style='color:red;'>{user_answer}</span> ... (❌ Poprawnie / Correcto: {correct_answer})</li>"
-                 all_correct = False
+                all_correct = False
 
-        st.markdown(f"### Wyniki / Resultados:\n<ul>{feedback_html}</ul>", unsafe_allow_html=True)
+        st.markdown("### Wyniki / Resultados:")
+        st.markdown("\n".join(filled_dialog), unsafe_allow_html=True)
+
         if all_correct:
             st.success("🎉 Gratulacje! Wszystko poprawnie! / ¡Felicidades! ¡Todo correcto!")
             st.session_state.feedback[exercise_key][q2_key] = True
@@ -420,27 +443,35 @@ elif st.session_state.page == "Vocabulary & Phrases":
 
     if selected_scenario:
          correct_greeting = scenarios[selected_scenario]
+         # Define potential options, ensure correct one is included
          greeting_options = ["Dzień dobry!", "Cześć!", "Do widzenia!", "Na razie!"]
-         if correct_greeting not in greeting_options: # Should not happen with current setup
-              greeting_options.append(correct_greeting)
-         # Ensure options are unique and shuffled
-         random.shuffle(greeting_options)
+         if correct_greeting not in greeting_options:
+              greeting_options.append(correct_greeting) # Should not happen here
+         # Make sure options are unique and present a reasonable set
+         options_for_radio = random.sample(greeting_options, min(len(greeting_options), 4)) # Show up to 4 options
+         if correct_greeting not in options_for_radio: # Ensure correct answer is always an option
+             options_for_radio.pop()
+             options_for_radio.append(correct_greeting)
+             random.shuffle(options_for_radio)
 
 
-         user_choice = st.radio("Co powiesz? / ¿Qué dices?", greeting_options, index=None, key=f"{q3_key}_radio")
+         user_choice = st.radio("Co powiesz? / ¿Qué dices?", options_for_radio, index=None, key=f"{q3_key}_radio")
 
-         if user_choice:
+         if user_choice is not None:
              if user_choice == correct_greeting:
-                 st.success("✅ Zgadza się! ¡Correcto!")
+                 if st.session_state.feedback[exercise_key].get(q3_key) is not False:
+                      st.success("✅ Zgadza się! ¡Correcto!")
                  st.session_state.feedback[exercise_key][q3_key] = True
              else:
                  st.error(f"❌ W tej sytuacji lepiej powiedzieć '{correct_greeting}'. / En esta situación es mejor decir '{correct_greeting}'.")
                  st.session_state.feedback[exercise_key][q3_key] = False
+         else:
+             st.session_state.feedback[exercise_key][q3_key] = None
 
 
     if st.button("➡️ Dalej / Siguiente: Gramatyka"):
         st.session_state.page = "Grammar Focus"
-        st.experimental_rerun()
+        st.rerun() # CORRECTED: Use st.rerun()
 
 # == GRAMMAR FOCUS ==
 elif st.session_state.page == "Grammar Focus":
@@ -469,63 +500,80 @@ elif st.session_state.page == "Grammar Focus":
     exercise_key = "grammar_mowic"
     if exercise_key not in st.session_state.feedback:
          st.session_state.feedback[exercise_key] = {}
+    # Use session state for inputs
+    if exercise_key not in st.session_state:
+        st.session_state[exercise_key] = {}
+
 
     mowic_sentences = [
-        ("Czy ______ po polsku? (ty)", "mówisz"),
-        ("______ po angielsku. (my)", "mówimy"),
+        ("Czy ______ po polsku? (ty)", ["mówisz"]),
+        ("______ po angielsku. (my)", ["mówimy"]),
         ("Oni nie ______ po francusku, ale ______ po polsku. (oni / oni)", ["mówią", "mówią"]),
         ("On ______ trochę po rosyjsku, ale ja nie ______. (on / ja)", ["mówi", "mówię"]),
-        ("Czy ______ po niemiecku? (wy)", "mówicie"),
-        ("One nie ______ po hiszpańsku. (one)", "mówią"),
-        ("Czy ona ______ po polsku?", "mówi"), # Pronoun inferred from context
-        ("Nie ______ po włosku. (ja)", "mówię")
+        ("Czy ______ po niemiecku? (wy)", ["mówicie"]),
+        ("One nie ______ po hiszpańsku. (one)", ["mówią"]),
+        ("Czy ona ______ po polsku?", ["mówi"]), # Pronoun inferred
+        ("Nie ______ po włosku. (ja)", ["mówię"])
     ]
 
-    mowic_inputs = {}
+    # Initialize inputs in session state if not present
+    for i in range(len(mowic_sentences)):
+        q_key = f"{exercise_key}_{i}"
+        num_blanks = mowic_sentences[i][0].count("______")
+        if q_key not in st.session_state[exercise_key]:
+             st.session_state[exercise_key][q_key] = [""] * num_blanks
+
+
+    # Display inputs using session state values
     for i, (sentence, correct_forms) in enumerate(mowic_sentences):
         q_key = f"{exercise_key}_{i}"
         num_blanks = sentence.count("______")
-        mowic_inputs[i] = []
+        prompt = sentence.replace("______", "_______") # Visual placeholder
+
         if num_blanks == 1:
-            prompt = sentence.replace("______", "_______")
-            mowic_inputs[i].append(st.text_input(f"{i+1}. {prompt}", key=q_key, placeholder="Wpisz formę / Escribe la forma"))
+            st.session_state[exercise_key][q_key][0] = st.text_input(f"{i+1}. {prompt}", value=st.session_state[exercise_key][q_key][0], key=q_key, placeholder="Wpisz formę")
         elif num_blanks == 2:
-             prompt = sentence.replace("______", "_______", 1).replace("______", "_______", 1)
              cols = st.columns(2)
              with cols[0]:
-                 mowic_inputs[i].append(st.text_input(f"{i+1}a. {prompt} (pierwsza luka / primer hueco)", key=f"{q_key}_a", placeholder="Forma 1"))
+                 st.session_state[exercise_key][q_key][0] = st.text_input(f"{i+1}a. {prompt} (luka 1)", value=st.session_state[exercise_key][q_key][0], key=f"{q_key}_a", placeholder="Forma 1")
              with cols[1]:
-                 mowic_inputs[i].append(st.text_input(f"{i+1}b. {prompt} (druga luka / segundo hueco)", key=f"{q_key}_b", placeholder="Forma 2"))
+                 st.session_state[exercise_key][q_key][1] = st.text_input(f"{i+1}b. {prompt} (luka 2)", value=st.session_state[exercise_key][q_key][1], key=f"{q_key}_b", placeholder="Forma 2")
 
 
     if st.button("Sprawdź MÓWIĆ / Comprobar MÓWIĆ", key=f"{exercise_key}_check"):
          all_correct_mowic = True
          feedback_html_mowic = "<ul>"
-         for i, (sentence, correct_forms) in enumerate(mowic_sentences):
-              user_answers = [inp.strip().lower() for inp in mowic_inputs[i]]
-              correct_forms_list = correct_forms if isinstance(correct_forms, list) else [correct_forms]
-              correct_forms_list = [f.lower() for f in correct_forms_list]
+         for i, (sentence, correct_forms_list) in enumerate(mowic_sentences):
+              q_key = f"{exercise_key}_{i}"
+              user_answers = [ans.strip().lower() for ans in st.session_state[exercise_key][q_key]]
+              correct_forms_list_lower = [f.lower() for f in correct_forms_list]
 
               sentence_display = sentence
               correct_in_sentence = True
-              for j in range(len(correct_forms_list)):
-                   user_ans = user_answers[j]
-                   correct_ans = correct_forms_list[j]
+              temp_user_answers = user_answers[:] # Copy list
+
+              # Replace blanks with feedback spans
+              for j in range(len(correct_forms_list_lower)):
+                   user_ans = temp_user_answers[j]
+                   correct_ans = correct_forms_list_lower[j]
                    if user_ans == correct_ans:
-                       sentence_display = sentence_display.replace("______", f"<span style='color:green; font-weight:bold;'>{user_ans}</span>", 1)
+                       replacement = f"<span style='color:green; font-weight:bold;'>{user_ans}</span>"
                    else:
-                       sentence_display = sentence_display.replace("______", f"<span style='color:red;'>{user_ans}</span> (Poprawnie: {correct_ans})", 1)
+                       replacement = f"<span style='color:red;'>{user_ans}</span> (Poprawnie: {correct_ans})"
                        correct_in_sentence = False
                        all_correct_mowic = False
+                   sentence_display = sentence_display.replace("______", replacement, 1)
+
               feedback_html_mowic += f"<li>{sentence_display} {'✅' if correct_in_sentence else '❌'}</li>"
+
          feedback_html_mowic += "</ul>"
          st.markdown(feedback_html_mowic, unsafe_allow_html=True)
+         st.session_state.feedback[exercise_key]["all_correct"] = all_correct_mowic # Store overall result
+
          if all_correct_mowic:
              st.success("🎉 Świetnie! Czasownik 'mówić' opanowany! / ¡Genial! ¡Verbo 'mówić' dominado!")
-             st.session_state.feedback[exercise_key]["all_correct"] = True
          else:
              st.warning("Popraw błędy i spróbuj ponownie. / Corrige los errores e inténtalo de nuevo.")
-             st.session_state.feedback[exercise_key]["all_correct"] = False
 
 
     # --- Nazywać się & Mieć ---
@@ -595,7 +643,7 @@ elif st.session_state.page == "Grammar Focus":
 
     if st.button("➡️ Dalej / Siguiente: Wymowa"):
         st.session_state.page = "Pronunciation Practice"
-        st.experimental_rerun()
+        st.rerun() # CORRECTED: Use st.rerun()
 
 # == PRONUNCIATION PRACTICE ==
 elif st.session_state.page == "Pronunciation Practice":
@@ -622,22 +670,23 @@ elif st.session_state.page == "Pronunciation Practice":
         st.markdown(f"**{q_num_pron}.** Dźwięki / Sonidos: **{key}**")
         st.info(f"🎧 *Wyobraź sobie, że słyszysz jedno z tych słów... / Imagina que oyes una de estas palabras...*")
 
-        # Prepare options for radio button (word only)
         options = [opt[0] for opt in options_with_hints]
-        # Prepare hints string
         hints_str = " / ".join([f"'{opt[0]}' ({opt[1]})" for opt in options_with_hints])
         st.caption(f"Opcje / Opciones: {hints_str}")
 
+        user_choice = st.radio(f"Które słowo słyszysz? / ¿Qué palabra oyes?", options, key=q_key, index=None, label_visibility="collapsed")
 
-        user_choice = st.radio(f"Które słowo słyszysz? / ¿Qué palabra oyes?", options, key=q_key, index=None, label_visibility="collapsed") # Hide main label
-
-        if user_choice:
+        if user_choice is not None:
             if options.index(user_choice) == correct_index:
-                st.success("✅ Dobrze! ¡Correcto!")
-                st.session_state.feedback[exercise_key][q_key] = True
+                 if st.session_state.feedback[exercise_key].get(q_key) is not False:
+                     st.success("✅ Dobrze! ¡Correcto!")
+                 st.session_state.feedback[exercise_key][q_key] = True
             else:
-                st.error(f"❌ Spróbuj ponownie. La respuesta correcta era '{options[correct_index]}'. Intenta de nuevo.")
-                st.session_state.feedback[exercise_key][q_key] = False
+                 st.error(f"❌ Spróbuj ponownie. La respuesta correcta era '{options[correct_index]}'. Intenta de nuevo.")
+                 st.session_state.feedback[exercise_key][q_key] = False
+        else:
+             st.session_state.feedback[exercise_key][q_key] = None
+
         q_num_pron += 1
 
     st.subheader("Czytanie na głos / Leer en voz alta")
@@ -647,13 +696,13 @@ elif st.session_state.page == "Pronunciation Practice":
         "Szczecin", "chrząszcz", "źdźbło", "pięćdziesiąt", "dziękuję",
         "Warszawa", "Wrocław", "Kraków", "Łódź", "Gdańsk" # Cities from PDF
     ]
-    st.table(words_to_read)
+    st.table([[word] for word in words_to_read]) # Display as a table for better spacing
     st.info("💡 Nagraj siebie i porównaj z wymową native speakera online! / ¡Grábate y compara con la pronunciación de un hablante nativo online!")
 
 
     if st.button("➡️ Dalej / Siguiente: Dialogi"):
         st.session_state.page = "Dialogues & Context"
-        st.experimental_rerun()
+        st.rerun() # CORRECTED: Use st.rerun()
 
 # == DIALOGUES & CONTEXT ==
 elif st.session_state.page == "Dialogues & Context":
@@ -674,47 +723,43 @@ elif st.session_state.page == "Dialogues & Context":
     if exercise_key not in st.session_state.feedback:
          st.session_state.feedback[exercise_key] = {}
     q_key = f"{exercise_key}_fill"
+    # Session state for inputs
+    if q_key not in st.session_state:
+        st.session_state[q_key] = ["", "", ""]
+
 
     st.markdown("Uzupełnij dialog / Completa el diálogo:")
     words_bank_d2 = ["Nazywam się", "Jak", "Miło mi"]
     st.info(f"Użyj / Usa: `{', '.join(words_bank_d2)}`")
 
-    dialog_d2_inputs = {}
-    dialog_d2_inputs[0] = st.text_input("Marek: Cześć! ______ Marek Mazur. A ty, ______ się nazywasz? (pierwsza luka)", key=f"{q_key}_0")
-    dialog_d2_inputs[1] = st.text_input("Marek: Cześć! ______ Marek Mazur. A ty, ______ się nazywasz? (druga luka)", key=f"{q_key}_1")
+    st.session_state[q_key][0] = st.text_input("Marek: Cześć! ______ Marek Mazur. [0]", value=st.session_state[q_key][0], key=f"{q_key}_0")
+    st.session_state[q_key][1] = st.text_input("Marek: ... A ty, ______ się nazywasz? [1]", value=st.session_state[q_key][1], key=f"{q_key}_1")
     st.markdown("Julia: Cześć! Nazywam się Julia Lewandowska.")
-    dialog_d2_inputs[2] = st.text_input("Marek: ______.", key=f"{q_key}_2")
+    st.session_state[q_key][2] = st.text_input("Marek: ______. [2]", value=st.session_state[q_key][2], key=f"{q_key}_2")
 
-    solution_d2 = ["Nazywam się", "jak", "Miło mi"] # Lowercase 'jak' typical in speech context
+
+    solution_d2 = ["Nazywam się", "jak", "Miło mi"] # Lowercase 'jak' typical
 
     if st.button("Sprawdź Dialog 2 / Comprobar Diálogo 2", key=f"{q_key}_check"):
          correct_d2 = True
-         feedback_d2 = "Wyniki / Resultados:\n"
-         if dialog_d2_inputs[0].strip().lower() == solution_d2[0].lower():
-             feedback_d2 += f"*   Luka 1: <span style='color:green;'>{dialog_d2_inputs[0].strip()}</span> ✅\n"
-         else:
-             feedback_d2 += f"*   Luka 1: <span style='color:red;'>{dialog_d2_inputs[0].strip()}</span> ❌ (Poprawnie: {solution_d2[0]})\n"
-             correct_d2 = False
+         feedback_d2_html = "Wyniki / Resultados:<ul>"
+         for i in range(len(solution_d2)):
+             user_ans = st.session_state[q_key][i].strip()
+             correct_ans = solution_d2[i]
+             if user_ans.lower() == correct_ans.lower():
+                 feedback_d2_html += f"<li>Luka {i}: <span style='color:green;'>{user_ans}</span> ✅</li>"
+             else:
+                 feedback_d2_html += f"<li>Luka {i}: <span style='color:red;'>{user_ans}</span> ❌ (Poprawnie: {correct_ans})</li>"
+                 correct_d2 = False
+         feedback_d2_html += "</ul>"
 
-         if dialog_d2_inputs[1].strip().lower() == solution_d2[1].lower():
-             feedback_d2 += f"*   Luka 2: <span style='color:green;'>{dialog_d2_inputs[1].strip()}</span> ✅\n"
-         else:
-             feedback_d2 += f"*   Luka 2: <span style='color:red;'>{dialog_d2_inputs[1].strip()}</span> ❌ (Poprawnie: {solution_d2[1]})\n"
-             correct_d2 = False
+         st.markdown(feedback_d2_html, unsafe_allow_html=True)
+         st.session_state.feedback[exercise_key][q_key] = correct_d2 # Store overall result
 
-         if dialog_d2_inputs[2].strip().lower() == solution_d2[2].lower():
-             feedback_d2 += f"*   Luka 3: <span style='color:green;'>{dialog_d2_inputs[2].strip()}</span> ✅\n"
-         else:
-              feedback_d2 += f"*   Luka 3: <span style='color:red;'>{dialog_d2_inputs[2].strip()}</span> ❌ (Poprawnie: {solution_d2[2]})\n"
-              correct_d2 = False
-
-         st.markdown(feedback_d2, unsafe_allow_html=True)
          if correct_d2:
              st.success("🎉 Super!")
-             st.session_state.feedback[exercise_key][q_key] = True
          else:
              st.warning("Popraw błędy. / Corrige los errores.")
-             st.session_state.feedback[exercise_key][q_key] = False
 
 
     st.subheader("Ćwiczenie: Pytanie o innych (z PDF str. 6, 7)")
@@ -736,17 +781,23 @@ elif st.session_state.page == "Dialogues & Context":
     if selected_person:
         pronoun_options = ["on", "ona", "ono", "oni", "one"]
         correct_pronoun = people[selected_person]
+        # Determine verb form based on pronoun
+        verb_form = "nazywa się" if correct_pronoun in ["on", "ona", "ono"] else "nazywają się"
 
-        user_choice = st.radio(f"Jak { 'on/ona/ono/oni/one'.replace(correct_pronoun, '______') } się nazywa/nazywają?",
+        user_choice = st.radio(f"Jak ______ {verb_form}?",
                                pronoun_options, index=None, key=f"{q_key_pronoun}_radio")
 
-        if user_choice:
+        if user_choice is not None:
              if user_choice == correct_pronoun:
-                 st.success(f"✅ Tak! Poprawny zaimek to '{correct_pronoun}'. / ¡Sí! El pronombre correcto es '{correct_pronoun}'.")
-                 st.session_state.feedback[exercise_key][q_key_pronoun] = True
+                  if st.session_state.feedback[exercise_key].get(q_key_pronoun) is not False:
+                     st.success(f"✅ Tak! Poprawny zaimek to '{correct_pronoun}'. / ¡Sí! El pronombre correcto es '{correct_pronoun}'.")
+                  st.session_state.feedback[exercise_key][q_key_pronoun] = True
              else:
                  st.error(f"❌ Niezupełnie. Dla '{selected_person}' poprawny zaimek to '{correct_pronoun}'. / No exactamente. Para '{selected_person}' el pronombre correcto es '{correct_pronoun}'.")
                  st.session_state.feedback[exercise_key][q_key_pronoun] = False
+        else:
+            st.session_state.feedback[exercise_key][q_key_pronoun] = None
+
 
     st.subheader("Ćwiczenie: Ułóż zdania / Ordena las frases")
     exercise_key = "dialogue_reorder"
@@ -757,12 +808,18 @@ elif st.session_state.page == "Dialogues & Context":
     words_to_order = ["się", "Adam", "Nazywam"]
     correct_order = "Nazywam się Adam"
     st.markdown(f"Ułóż słowa w poprawnej kolejności: / Ordena las palabras en el orden correcto:")
-    st.code(f"{' / '.join(words_to_order)}")
+    # Shuffle words for display
+    display_words = random.sample(words_to_order, len(words_to_order))
+    st.code(f"{' / '.join(display_words)}")
 
     user_order = st.text_input("Wpisz poprawne zdanie: / Escribe la frase correcta:", key=q_key_reorder)
 
     if st.button("Sprawdź kolejność / Comprobar orden", key=f"{q_key_reorder}_check"):
-        if user_order.strip().rstrip('.').lower() == correct_order.lower():
+        # Normalize comparison: remove punctuation, lowercase
+        normalized_user = user_order.strip().rstrip('.?!').lower()
+        normalized_correct = correct_order.lower()
+
+        if normalized_user == normalized_correct:
             st.success(f"✅ Doskonale! '{correct_order}'.")
             st.session_state.feedback[exercise_key][q_key_reorder] = True
         else:
@@ -777,5 +834,3 @@ elif st.session_state.page == "Dialogues & Context":
 # --- Footer or End Note ---
 st.sidebar.markdown("---")
 st.sidebar.info("Lekcja oparta na materiałach PDF. / Lección basada en materiales PDF.")
-# Display Completion Status (Optional)
-# Calculate score based on st.session_state.feedback if needed
