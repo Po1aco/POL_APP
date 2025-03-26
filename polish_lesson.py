@@ -97,9 +97,9 @@ div[data-baseweb="input"] input, div[data-baseweb="select"] div {
 /* --- Radio Button Styling --- */
 div[data-baseweb="radio"] > label {
     background-color: rgba(255, 255, 255, 0.7); border: 1px solid #D5DBDB;
-    border-radius: 25px; padding: 10px 15px 10px 10px !important; margin: 5px 3px !important; /* Reduced horizontal margin */
+    border-radius: 25px; padding: 10px 15px 10px 10px !important; margin: 5px 3px !important;
     transition: all 0.2s ease-in-out; display: flex !important; align-items: center;
-    width: auto; min-width: 80px; /* Adjusted min-width */ justify-content: flex-start;
+    width: auto; min-width: 80px; justify-content: flex-start;
 }
 /* Selected radio option's container */
 div[data-baseweb="radio"] input[type="radio"]:checked + div + label {
@@ -110,7 +110,7 @@ div[data-baseweb="radio"] input[type="radio"]:checked + div + label {
 div[data-baseweb="radio"] > label:hover { border-color: #B0BEC5; background-color: rgba(245, 245, 245, 0.9); }
 div[data-baseweb="radio"] input[type="radio"]:checked + div + label:hover { background-color: #1C4B82 !important; border-color: #1C4B82 !important; }
 /* Horizontal radio buttons */
-.stRadio[role="radiogroup"] > div { display: inline-block; margin-right: 5px; /* Reduced space */ }
+.stRadio[role="radiogroup"] > div { display: inline-block; margin-right: 5px; }
 
 /* --- Sidebar Styling --- */
 .stSidebar {
@@ -162,7 +162,6 @@ with body_col_main:
         with st.container():
              st.markdown('<div class="content-box">', unsafe_allow_html=True)
              st.header("Lekcja 0/1: Pierwsze kroki / Primeros pasos")
-             # Content... (Keep as is)
              st.markdown("""
                 Witaj w interaktywnej lekcji języka polskiego dla osób mówiących po hiszpańsku!
                 ¡Bienvenido/a a esta lección interactiva de polaco para hispanohablantes!
@@ -192,7 +191,7 @@ with body_col_main:
         with st.container():
             st.markdown('<div class="content-box">', unsafe_allow_html=True)
             st.markdown("Polski alfabet z przykładami i wymową (uproszczoną).")
-            # --- Alphabet Table (Keep as is) ---
+            # --- Alphabet Table ---
             st.markdown("""
             | Litera | Nazwa | Wymowa (IPA approx.) | Przykład | Nota dla Hiszpanów |
             |---|---|---|---|---|
@@ -242,13 +241,11 @@ with body_col_main:
         st.markdown("Wybierz słowo, które słyszysz (symulacja).")
 
         pairs = { "s / sz / ś": (["stop", "szok", "środa"], 2), "c / cz / ć": (["cena", "czekolada", "ćma"], 1), "z / rz / ź": (["zoo", "rzeka", "źle"], 0), "l / ł": (["lekcja", "ładny"], 1), "i / y": (["miły", "myły"], 0) }
-        exercise_key = "alphabet_pronunciation"
+        exercise_key = "alphabet_pronunciation"; q_num = 1
         if exercise_key not in st.session_state.feedback: st.session_state.feedback[exercise_key] = {}
-        q_num = 1
         for key, (options, correct_index) in pairs.items():
              st.markdown('<div class="question-box">', unsafe_allow_html=True)
-             q_key = f"{exercise_key}_{q_num}"
-             st.markdown(f"**{q_num}. Dźwięk: {key}**"); st.caption(f"🎧 *Wyobraź sobie, że słyszysz...*")
+             q_key = f"{exercise_key}_{q_num}"; st.markdown(f"**{q_num}. Dźwięk: {key}**"); st.caption(f"🎧 *Wyobraź sobie, że słyszysz...*")
              current_choice_index = None
              if q_key in st.session_state.feedback and st.session_state.feedback[q_key] is not None and 'user_choice' in st.session_state.feedback[q_key]:
                   try: current_choice_index = options.index(st.session_state.feedback[q_key]['user_choice'])
@@ -269,23 +266,19 @@ with body_col_main:
         st.title("🗣️ Słownictwo i Zwroty")
         with st.container():
             st.markdown('<div class="content-box">', unsafe_allow_html=True)
-            st.subheader("Pozdrowienia / Saludos") # Content shortened for brevity
-            st.markdown("""*   **Dzień dobry!** - B. días/tardes (F) | *   **Cześć!** - Hola/Adiós (Inf) | *   **Dobry wieczór!** - B. noches (F) | *   **Dobranoc!** - B. noches (parting) | *   **Do widzenia!** - Adiós (F) | *   **Na razie!** - H. luego (Inf)""")
-            st.subheader("Przedstawianie się / Presentaciones")
-            st.markdown("""*   **Jak się nazywasz?** - ¿Cómo te llamas? (Inf) | *   **Jak pan/pani się nazywa?** - ¿Cómo se llama Ud.? (F) | *   **Nazywam się...** - Me llamo... | *   **Jak masz/ma na imię?** - ¿Cuál es tu/su nombre? | *   **Mam na imię...** - Mi nombre es... | *   **Miło mi.** - Encantado/a.""")
-            st.subheader("Zaimki Osobowe / Pronombres")
-            st.markdown("""*   ja - yo | my - nosotros | *   ty - tú | wy - vosotros | *   on - él | oni - ellos (con hombres) | *   ona - ella | one - ellas/ellos (sin hombres/cosas) | *   ono - ello | *   Pan/Pani - Ud. | Państwo - Uds.""")
+            st.subheader("Pozdrowienia / Saludos"); st.markdown("""*   **Dzień dobry!** - B. días/tardes (F) | *   **Cześć!** - Hola/Adiós (Inf) | *   **Dobry wieczór!** - B. noches (F) | *   **Dobranoc!** - B. noches (parting) | *   **Do widzenia!** - Adiós (F) | *   **Na razie!** - H. luego (Inf)""")
+            st.subheader("Przedstawianie się / Presentaciones"); st.markdown("""*   **Jak się nazywasz?** - ¿Cómo te llamas? (Inf) | *   **Jak pan/pani się nazywa?** - ¿Cómo se llama Ud.? (F) | *   **Nazywam się...** - Me llamo... | *   **Jak masz/ma na imię?** - ¿Cuál es tu/su nombre? | *   **Mam na imię...** - Mi nombre es... | *   **Miło mi.** - Encantado/a.""")
+            st.subheader("Zaimki Osobowe / Pronombres"); st.markdown("""*   ja - yo | my - nosotros | *   ty - tú | wy - vosotros | *   on - él | oni - ellos (con hombres) | *   ona - ella | one - ellas/ellos (sin hombres/cosas) | *   ono - ello | *   Pan/Pani - Ud. | Państwo - Uds.""")
             st.markdown('</div>', unsafe_allow_html=True)
 
         st.subheader("📝 Ćwiczenia / Ejercicios")
-        exercise_key = "vocab_phrases"
+        exercise_key = "vocab_phrases";
         if exercise_key not in st.session_state.feedback: st.session_state.feedback[exercise_key] = {}
 
         # --- Exercise 1: Matching ---
         st.markdown('<div class="question-box">', unsafe_allow_html=True)
         st.markdown("**1. Dopasuj polskie zwroty do hiszpańskich.**")
-        q1_key = f"{exercise_key}_q1"
-        match_options = { "Dzień dobry!": "¡Buenos días/tardes! (Formal)", "Jak się nazywasz?": "¿Cómo te llamas? (Informal)", "Do widzenia!": "¡Adiós! (Formal)", "Miło mi.": "Encantado/a.", "Cześć!": "¡Hola! / ¡Adiós! (Informal)"}
+        q1_key = f"{exercise_key}_q1"; match_options = { "Dzień dobry!": "¡Buenos días/tardes! (Formal)", "Jak się nazywasz?": "¿Cómo te llamas? (Informal)", "Do widzenia!": "¡Adiós! (Formal)", "Miło mi.": "Encantado/a.", "Cześć!": "¡Hola! / ¡Adiós! (Informal)"}
         polish_phrases = list(match_options.keys()); spanish_translations = list(match_options.values())
         if q1_key not in st.session_state: st.session_state[q1_key] = {}
         if 'shuffled_spanish' not in st.session_state[q1_key]: st.session_state[q1_key]['shuffled_spanish'] = random.sample(spanish_translations, len(spanish_translations))
@@ -294,13 +287,13 @@ with body_col_main:
         cols1 = st.columns(2)
         with cols1[0]:
             for i, phrase in enumerate(polish_phrases):
-                # --- CORRECTED try/except block ---
                 current_selection = st.session_state[q1_key]['user_matches'].get(phrase, "")
-                sel_index = 0 # Default index
+                # --- CORRECTED try/except block ---
+                sel_index = 0
                 try:
                     sel_index = ([""] + shuffled_spanish).index(current_selection)
                 except ValueError:
-                    sel_index = 0 # Fallback if value not found
+                    sel_index = 0
                 # --- END CORRECTION ---
                 st.session_state[q1_key]['user_matches'][phrase] = st.selectbox(f"{i+1}. {phrase}", options=[""] + shuffled_spanish, key=f"{q1_key}_{i}", index=sel_index, label_visibility="visible")
         with cols1[1]: st.markdown("**Opcje:**"); st.table([[trans] for trans in shuffled_spanish])
@@ -333,9 +326,18 @@ with body_col_main:
         st.session_state[q2_key][5] = st.text_input(f"B: ______ mi. [5]", value=st.session_state[q2_key][5], key=f"{q2_key}_5")
         if st.button("Sprawdź Fill-in", key=f"{q2_key}_check"):
             correct_count = 0; all_correct = True
-            filled_dialog = [ f"A: Dzień {'<span style=\'color:green; font-weight:600;\'>' + s[0] + '</span>' if s[0].lower() == sol[0] else '<span style=\'color:red;\'>' + s[0] + '</span>' + f' ({sol[0]})'}! Jak {'<span style=\'color:green; font-weight:600;\'>' + s[1] + '</span>' if s[1].lower() == sol[1] else '<span style=\'color:red;\'>' + s[1] + '</span>' + f' ({sol[1]})'} się nazywa?", f"B: Dzień {'<span style=\'color:green; font-weight:600;\'>' + s[2] + '</span>' if s[2].lower() == sol[2] else '<span style=\'color:red;\'>' + s[2] + '</span>' + f' ({sol[2]})'}! {'<span style=\'color:green; font-weight:600;\'>' + s[3] + '</span>' if s[3].lower() == sol[3] else '<span style=\'color:red;\'>' + s[3] + '</span>' + f' ({sol[3]})'} Piotr Nowicki. Jak {'<span style=\'color:green; font-weight:600;\'>' + s[4] + '</span>' if s[4].lower() == sol[4] else '<span style=\'color:red;\'>' + s[4] + '</span>' + f' ({sol[4]})'} się nazywa?", "<span style='margin-left: 10px;'>A: Anna Kamińska.</span>", f"B: {'<span style=\'color:green; font-weight:600;\'>' + s[5] + '</span>' if s[5].lower() == sol[5] else '<span style=\'color:red;\'>' + s[5] + '</span>' + f' ({sol[5]})'} mi." for s, sol in [( [st.session_state[q2_key][i].strip() for i in range(len(solution))], solution )]]
-            for i in range(len(solution)):
-                if st.session_state[q2_key][i].strip().lower() == solution[i].lower(): correct_count +=1
+            # --- CORRECTED list construction ---
+            user_answers = [st.session_state[q2_key][i].strip() for i in range(len(solution))]
+            sol = solution # Alias
+            filled_dialog = [
+                f"A: Dzień {'<span style=\'color:green; font-weight:600;\'>' + user_answers[0] + '</span>' if user_answers[0].lower() == sol[0].lower() else '<span style=\'color:red;\'>' + user_answers[0] + '</span>' + f' ({sol[0]})'}! Jak {'<span style=\'color:green; font-weight:600;\'>' + user_answers[1] + '</span>' if user_answers[1].lower() == sol[1].lower() else '<span style=\'color:red;\'>' + user_answers[1] + '</span>' + f' ({sol[1]})'} się nazywa?",
+                f"B: Dzień {'<span style=\'color:green; font-weight:600;\'>' + user_answers[2] + '</span>' if user_answers[2].lower() == sol[2].lower() else '<span style=\'color:red;\'>' + user_answers[2] + '</span>' + f' ({sol[2]})'}! {'<span style=\'color:green; font-weight:600;\'>' + user_answers[3] + '</span>' if user_answers[3].lower() == sol[3].lower() else '<span style=\'color:red;\'>' + user_answers[3] + '</span>' + f' ({sol[3]})'} Piotr Nowicki. Jak {'<span style=\'color:green; font-weight:600;\'>' + user_answers[4] + '</span>' if user_answers[4].lower() == sol[4].lower() else '<span style=\'color:red;\'>' + user_answers[4] + '</span>' + f' ({sol[4]})'} się nazywa?",
+                "<span style='margin-left: 10px;'>A: Anna Kamińska.</span>",
+                f"B: {'<span style=\'color:green; font-weight:600;\'>' + user_answers[5] + '</span>' if user_answers[5].lower() == sol[5].lower() else '<span style=\'color:red;\'>' + user_answers[5] + '</span>' + f' ({sol[5]})'} mi."
+            ]
+            # --- END CORRECTION ---
+            for i in range(len(solution)): # Check correctness
+                if user_answers[i].lower() == solution[i].lower(): correct_count +=1
                 else: all_correct = False
             st.markdown("<h5>Wyniki:</h5>" + "<br>".join(filled_dialog), unsafe_allow_html=True)
             st.session_state.feedback[exercise_key][q2_key] = all_correct
@@ -400,7 +402,7 @@ with body_col_main:
             with cols_mowic[1]: st.session_state[exercise_key]['inputs'][q_key][1] = st.text_input(f"{i+1}b. {prompt} (2)", value=st.session_state[exercise_key]['inputs'][q_key][1], key=f"{q_key}_b", placeholder="Forma 2")
             st.markdown('</div>', unsafe_allow_html=True)
         if st.button("Sprawdź MÓWIĆ", key=f"{exercise_key}_check"):
-            all_correct_mowic = True; feedback_html_mowic = "<ul>" # Feedback logic... (Keep as is)
+            all_correct_mowic = True; feedback_html_mowic = "<ul>"
             for i, (sentence, correct_forms_list) in enumerate(mowic_sentences):
                 q_key = f"{exercise_key}_{i}"; user_answers = [ans.strip().lower() for ans in st.session_state[exercise_key]['inputs'][q_key]]; correct_forms_list_lower = [f.lower() for f in correct_forms_list]
                 sentence_display = sentence; correct_in_sentence = True
@@ -420,7 +422,7 @@ with body_col_main:
 
         st.markdown('<div class="content-box">', unsafe_allow_html=True)
         st.subheader("Inne Czasowniki i Notatki")
-        cols_verbs = st.columns(2) # Content... (Keep as is)
+        cols_verbs = st.columns(2)
         with cols_verbs[0]: st.markdown("**Nazywać się (llamarse)**"); st.markdown("""(ja) nazywam się | (ty) nazywasz się | (on/ona/ono) nazywa się | (my) nazywamy się | (wy) nazywacie się | (oni/one) nazywają się""")
         with cols_verbs[1]: st.markdown("**Mieć (tener)**"); st.markdown("""(ja) mam | (ty) masz | (on/ona/ono) ma | (my) mamy | (wy) macie | (oni/one) mają""")
         st.markdown("**Rodzaj i Zaimki:** *on, ona, ono* (sing.); *oni* (pl. con hombres), *one* (pl. sin hombres/cosas).")
@@ -434,10 +436,9 @@ with body_col_main:
         st.markdown('<div class="content-box">', unsafe_allow_html=True)
         st.markdown("Skupmy się na dźwiękach trudnych dla Hiszpanów.")
         sound_pairs = { "S vs SZ vs Ś": ([("sok","[s]"),("szok","[ʂ] 'sh'"),("siwy","[ɕ] soft 'sh'")],1), "C vs CZ vs Ć": ([("co","[ts]"),("czekam","[tʂ] 'ch'"),("ciocia","[tɕ] soft 'ch'")],0), "Z vs Ż/RZ vs Ź": ([("zero","[z]"),("rzeka","[ʐ] Fr 'j'"),("źle","[ʑ] soft Fr 'j'")],2), "L vs Ł": ([("lato","[l]"),("łatwo","[w]")],1), "I vs Y": ([("biły","[bʲi]"),("były","[bɨ] difficult")],1) }
-        exercise_key = "pronunciation_pairs"
+        exercise_key = "pronunciation_pairs"; q_num_pron = 1
         if exercise_key not in st.session_state.feedback: st.session_state.feedback[exercise_key] = {}
         st.subheader("Rozróżnianie dźwięków (symulacja)")
-        q_num_pron = 1
         for key, (options_with_hints, correct_index) in sound_pairs.items():
             st.markdown('<div class="question-box">', unsafe_allow_html=True)
             q_key = f"{exercise_key}_{q_num_pron}"; st.markdown(f"**{q_num_pron}. Dźwięki: {key}**"); st.caption(f"🎧 *Wyobraź sobie, że słyszysz...*")
@@ -460,7 +461,7 @@ with body_col_main:
             q_num_pron += 1
         st.markdown('</div>', unsafe_allow_html=True)
 
-        st.markdown('<div class="content-box">', unsafe_allow_html=True) # Box for reading practice
+        st.markdown('<div class="content-box">', unsafe_allow_html=True)
         st.subheader("Czytanie na głos / Leer en voz alta"); st.markdown("Spróbuj przeczytać te słowa.")
         words_to_read = ["Szczecin", "chrząszcz", "źdźbło", "pięćdziesiąt", "dziękuję", "Warszawa", "Wrocław", "Kraków", "Łódź", "Gdańsk"]
         st.table([[word] for word in words_to_read]); st.info("💡 Nagraj siebie i porównaj!")
@@ -471,15 +472,15 @@ with body_col_main:
     elif st.session_state.page == "Dialogues & Context":
         st.title("💬 Dialogi i Kontekst")
         st.markdown('<div class="content-box">', unsafe_allow_html=True)
-        st.subheader("Dialog 1: Formalne przedstawienie") # Content... (Keep as is)
+        st.subheader("Dialog 1: Formalne przedstawienie")
         st.markdown("""**Adam:** Dzień dobry! Nazywam się Adam Kowalski. A pani? \n**Ewa:** Dzień dobry! Nazywam się Ewa Nowak. \n**Adam:** Miło mi. \n**Ewa:** Miło mi.""")
         st.markdown('</div>', unsafe_allow_html=True)
 
-        st.subheader("Ćwiczenia / Ejercicios") # Header for exercises
+        st.subheader("Ćwiczenia / Ejercicios")
 
-        st.markdown('<div class="question-box">', unsafe_allow_html=True) # Box for Dialog 2
+        st.markdown('<div class="question-box">', unsafe_allow_html=True)
         st.markdown("**Dialog 2: Nieformalne (Uzupełnij)**")
-        exercise_key = "dialogue_informal"; q_key = f"{exercise_key}_fill" # Content... (Keep as is)
+        exercise_key = "dialogue_informal"; q_key = f"{exercise_key}_fill"
         if q_key not in st.session_state: st.session_state[q_key] = ["", "", ""]
         words_bank_d2 = ["Nazywam się", "Jak", "Miło mi"]; solution_d2 = ["Nazywam się", "jak", "Miło mi"]
         st.info(f"Użyj: `{', '.join(words_bank_d2)}`")
@@ -488,7 +489,7 @@ with body_col_main:
         st.markdown("<p style='margin-left: 10px;'>Julia: Cześć! Nazywam się Julia Lewandowska.</p>", unsafe_allow_html=True)
         st.session_state[q_key][2] = st.text_input("Marek: ______. [2]", value=st.session_state[q_key][2], key=f"{q_key}_2")
         if st.button("Sprawdź Dialog 2", key=f"{q_key}_check"):
-             correct_d2 = True; feedback_d2_html = "Wyniki:<ul>" # Feedback logic... (Keep as is)
+             correct_d2 = True; feedback_d2_html = "Wyniki:<ul>"
              for i in range(len(solution_d2)): user_ans = st.session_state[q_key][i].strip(); correct_ans = solution_d2[i];
              if user_ans.lower() == correct_ans.lower(): feedback_d2_html += f"<li>Luka {i}: <span style='color:green;'>{user_ans}</span> ✅</li>"
              else: feedback_d2_html += f"<li>Luka {i}: <span style='color:red;'>{user_ans}</span> ❌ (Popr: {correct_ans})</li>"; correct_d2 = False
@@ -499,9 +500,9 @@ with body_col_main:
         st.markdown('</div>', unsafe_allow_html=True)
 
 
-        st.markdown('<div class="question-box">', unsafe_allow_html=True) # Box for Pronoun Exercise
+        st.markdown('<div class="question-box">', unsafe_allow_html=True)
         st.markdown("**Pytanie o innych (Wybierz zaimek)**")
-        exercise_key = "dialogue_others"; q_key_pronoun = f"{exercise_key}_pronoun" # Content... (Keep as is)
+        exercise_key = "dialogue_others"; q_key_pronoun = f"{exercise_key}_pronoun"
         if q_key_pronoun not in st.session_state: st.session_state[q_key_pronoun] = {'selected_person': None, 'user_choice': None}
         people = { "Andrzej Wajda (m)": "on", "Agnieszka & Urszula R. (ż)": "one", "Andrzej & Maria S. (m+ż)": "oni", "Wisława Szymborska (ż)": "ona" }
         people_keys = list(people.keys())
@@ -527,9 +528,9 @@ with body_col_main:
         elif f"{q_key_pronoun}_select" in st.session_state and not selected_person: st.session_state.feedback.pop(exercise_key, None)
         st.markdown('</div>', unsafe_allow_html=True)
 
-        st.markdown('<div class="question-box">', unsafe_allow_html=True) # Box for Reorder Exercise
+        st.markdown('<div class="question-box">', unsafe_allow_html=True)
         st.markdown("**Ułóż zdania / Ordena las frases**")
-        exercise_key = "dialogue_reorder"; q_key_reorder = f"{exercise_key}_reorder" # Content... (Keep as is)
+        exercise_key = "dialogue_reorder"; q_key_reorder = f"{exercise_key}_reorder"
         if q_key_reorder not in st.session_state: st.session_state[q_key_reorder] = ""
         words_to_order = ["się", "Adam", "Nazywam"]; correct_order = "Nazywam się Adam"
         st.markdown(f"Ułóż słowa:");
