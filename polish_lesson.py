@@ -22,65 +22,57 @@ html, body, [class*="st-"], .stMarkdown {
 }
 
 /* --- Background --- */
-@keyframes gradientAnimation {
-    0% {background-position: 0% 50%;}
-    50% {background-position: 100% 50%;}
-    100% {background-position: 0% 50%;}
-}
+@keyframes gradientAnimation { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
 body::before {
-    content: ""; position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    z-index: -1;
-    background: linear-gradient(135deg, #F0F4F8, #FEF9E7, #F0F4F8); /* Lighter Pastel: AliceBlue to CosmicLatte */
-    background-size: 400% 400%;
-    animation: gradientAnimation 30s ease infinite;
+    content: ""; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: -1;
+    background: linear-gradient(135deg, #F0F4F8, #FEF9E7, #F0F4F8); /* Lighter Pastel */
+    background-size: 400% 400%; animation: gradientAnimation 30s ease infinite;
 }
 .stApp { background-color: transparent; }
 
 /* --- Main Content Box Styling --- */
 .content-box {
-    background-color: rgba(255, 255, 255, 0.85);
-    border: 1px solid #E0E0E0; border-radius: 18px;
-    padding: 25px 30px; margin-bottom: 30px;
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.06);
+    background-color: rgba(255, 255, 255, 0.9); /* Slightly more opaque */
+    border: 1px solid #DDE2E6; /* Softened border */
+    border-radius: 18px; padding: 25px 30px; margin-bottom: 30px;
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.05); /* Slightly deeper shadow */
 }
 
 /* --- Individual Question Container --- */
 .question-box {
-    background-color: rgba(255, 255, 255, 0.7);
-    border: 1px solid #D5DBDB; border-radius: 15px;
-    padding: 15px 20px; margin-bottom: 15px;
+    background-color: rgba(255, 255, 255, 0.75); /* More opaque */
+    border: 1px solid #E1E4E8; border-radius: 15px;
+    padding: 18px 22px; margin-bottom: 18px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
 }
-.question-box + .question-box { margin-top: 15px; }
+.question-box + .question-box { margin-top: 18px; }
 
 /* --- Headings and Text --- */
 h1, h2, h3, h4, h5, h6 {
     color: #262626 !important; /* Title color */
-    font-family: 'Gabarito', sans-serif !important;
-    font-weight: 600;
+    font-family: 'Gabarito', sans-serif !important; font-weight: 600;
 }
 .stMarkdown, p, li {
-   color: #333333; line-height: 1.7;
-   font-family: 'Gabarito', sans-serif !important;
+   color: #212121; /* Darker Gray for readability */
+   line-height: 1.7; font-family: 'Gabarito', sans-serif !important;
 }
-strong {
-   font-weight: 600; color: #262626 !important; /* Bold text color */
-}
+strong { font-weight: 600; color: #262626 !important; }
 code {
-    background-color: rgba(230, 230, 230, 0.7); padding: 0.2em 0.4em; margin: 0; font-size: 85%;
-    border-radius: 6px; border: 1px solid #CCCCCC; font-family: monospace; color: #333;
+    background-color: rgba(235, 237, 240, 0.8); /* Lighter grey */
+    padding: 0.2em 0.4em; margin: 0; font-size: 85%;
+    border-radius: 6px; border: 1px solid #D1D5DB;
+    font-family: monospace; color: #1F2937; /* Darker code text */
 }
 
 /* --- Button Styling --- */
 .stButton>button {
-    border: 1px solid #99AAB5; border-radius: 12px;
-    padding: 8px 18px; background-color: #FFFFFF; color: #546E7A;
+    border: 1px solid #B0BEC5; border-radius: 12px; /* Slightly darker border */
+    padding: 8px 18px; background-color: #FFFFFF; color: #37474F; /* Darker text */
     transition: all 0.2s ease; font-family: 'Gabarito', sans-serif !important;
     font-weight: 500; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 .stButton>button:hover {
-    background-color: #E3F2FD; color: #1E88E5; border-color: #90CAF9;
+    background-color: #ECEFF1; color: #1A237E; border-color: #90A4AE; /* Indigo text on hover */
     box-shadow: 0 3px 6px rgba(0,0,0,0.08); transform: translateY(-1px);
 }
 .stButton>button:active { transform: translateY(0px); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
@@ -90,59 +82,58 @@ code {
     font-weight: 500; color: #262626; font-family: 'Gabarito', sans-serif !important; padding-bottom: 8px;
 }
 div[data-baseweb="input"] input, div[data-baseweb="select"] div {
-   border-radius: 8px !important; border-color: #CFD8DC !important;
-   background-color: rgba(255, 255, 255, 0.9); font-family: 'Gabarito', sans-serif !important;
+   border-radius: 8px !important; border-color: #B0BEC5 !important; /* Match button border */
+   background-color: rgba(255, 255, 255, 0.95); font-family: 'Gabarito', sans-serif !important;
 }
 
 /* --- Radio Button Styling --- */
 div[data-baseweb="radio"] > label {
-    background-color: rgba(255, 255, 255, 0.7); border: 1px solid #D5DBDB;
+    background-color: rgba(255, 255, 255, 0.8); border: 1px solid #CFD8DC; /* Slightly lighter border */
     border-radius: 25px; padding: 10px 15px 10px 10px !important; margin: 5px 3px !important;
     transition: all 0.2s ease-in-out; display: flex !important; align-items: center;
-    width: auto; min-width: 80px; justify-content: flex-start;
+    width: auto; min-width: 80px; justify-content: flex-start; color: #37474F; /* Match button text */
 }
-/* Selected radio option's container */
 div[data-baseweb="radio"] input[type="radio"]:checked + div + label {
     background-color: #0D3C70 !important; border-color: #0D3C70 !important;
     color: white !important; box-shadow: 0 3px 6px rgba(13, 60, 112, 0.2);
 }
-/* Hover effect on radio label */
-div[data-baseweb="radio"] > label:hover { border-color: #B0BEC5; background-color: rgba(245, 245, 245, 0.9); }
+div[data-baseweb="radio"] > label:hover { border-color: #78909C; background-color: #F5F5F5; }
 div[data-baseweb="radio"] input[type="radio"]:checked + div + label:hover { background-color: #1C4B82 !important; border-color: #1C4B82 !important; }
-/* Horizontal radio buttons */
 .stRadio[role="radiogroup"] > div { display: inline-block; margin-right: 5px; }
 
 /* --- Sidebar Styling --- */
 .stSidebar {
-    background-color: rgba(253, 236, 236, 0.9); /* #FDECEC */
-    backdrop-filter: blur(6px); border-right: 1px solid rgba(229, 213, 213, 0.5);
+    background-color: rgba(253, 236, 236, 0.92); /* #FDECEC More opaque */
+    backdrop-filter: blur(6px); border-right: 1px solid rgba(220, 200, 200, 0.6);
 }
-.stSidebar .stMarkdown, .stSidebar .stRadio > label { color: #4E4E4E !important; font-family: 'Gabarito', sans-serif !important; }
-.stSidebar h1, .stSidebar h2, .stSidebar h3, .stSidebar h4, .stSidebar h5, .stSidebar h6, .stSidebar strong { color: #262626 !important; font-family: 'Gabarito', sans-serif !important; font-weight: 600; }
+/* INCREASED CONTRAST FOR SIDEBAR TEXT */
+.stSidebar .stMarkdown, .stSidebar .stRadio > label { color: #3E2723 !important; /* Dark Brown */ font-family: 'Gabarito', sans-serif !important; }
+.stSidebar h1, .stSidebar h2, .stSidebar h3, .stSidebar h4, .stSidebar h5, .stSidebar h6, .stSidebar strong { color: #1B0000 !important; /* Very Dark Brown/Black */ font-family: 'Gabarito', sans-serif !important; font-weight: 600; }
 .stSidebar .stButton>button {
     font-family: 'Gabarito', sans-serif !important; font-weight: 500;
-    border: 1px solid #BEBDBD; background-color: rgba(255, 255, 255, 0.8); color: #4E4E4E; border-radius: 10px;
+    border: 1px solid #8D6E63; /* Brown border */ background-color: rgba(255, 255, 255, 0.85);
+    color: #3E2723; /* Dark Brown text */ border-radius: 10px;
 }
-.stSidebar .stButton>button:hover { background-color: #DCDCDC; color: #262626; border-color: #AFAFAF; }
+.stSidebar .stButton>button:hover { background-color: #A1887F; color: #FFFFFF; border-color: #FFFFFF; } /* White text on brown hover */
 
 /* --- Alert box styling --- */
 .stAlert {
-    background-color: rgba(230, 230, 230, 0.8); border: 1px solid #CCCCCC; border-radius: 15px; padding: 15px 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); font-family: 'Gabarito', sans-serif !important; color: #333;
+    background-color: rgba(235, 235, 235, 0.85); border: 1px solid #C5C5C5; border-radius: 15px; padding: 15px 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); font-family: 'Gabarito', sans-serif !important; color: #212121; /* Darker text */
 }
-.stAlert.stSuccess { background-color: rgba(220, 245, 220, 0.85); border-color: #A0D0A0; }
-.stAlert.stWarning { background-color: rgba(255, 240, 220, 0.85); border-color: #FFD0A0; }
-.stAlert.stError   { background-color: rgba(255, 225, 225, 0.85); border-color: #FFB0B0; }
+.stAlert.stSuccess { background-color: rgba(220, 245, 220, 0.9); border-color: #9CCC65; } /* Brighter Green Border */
+.stAlert.stWarning { background-color: rgba(255, 240, 220, 0.9); border-color: #FFB74D; } /* Brighter Orange Border */
+.stAlert.stError   { background-color: rgba(255, 225, 225, 0.9); border-color: #E57373; } /* Brighter Red Border */
 
 </style>
 """, unsafe_allow_html=True)
 
 
-# --- Session State Initialization ---
+# --- Session State Initialization --- (Keep as is)
 if 'page' not in st.session_state: st.session_state.page = "Introduction"
 if 'feedback' not in st.session_state: st.session_state.feedback = {}
 
-# --- Navigation ---
+# --- Navigation --- (Keep as is)
 with st.sidebar:
     st.title("🇵🇱 Nawigacja 🇪🇸")
     pages = ["Introduction", "Alphabet", "Vocabulary & Phrases", "Grammar Focus", "Pronunciation Practice", "Dialogues & Context"]
@@ -151,12 +142,12 @@ with st.sidebar:
         if st.button(f"{emoji} {page}"): st.session_state.page = page; st.session_state.feedback = {}; st.rerun()
     st.markdown("---"); st.info("Lekcja oparta na PDF.")
 
-# --- Main Content Area with Padding ---
+# --- Main Content Area with Padding --- (Keep as is)
 body_col_left, body_col_main, body_col_right = st.columns([1, 5, 1])
 
 with body_col_main:
 
-    # == INTRODUCTION ==
+    # == INTRODUCTION == (Keep as is)
     if st.session_state.page == "Introduction":
         st.title("👋 Witaj! ¡Bienvenido/a al Polaco!")
         with st.container():
@@ -185,13 +176,12 @@ with body_col_main:
              st.markdown('</div>', unsafe_allow_html=True)
         if st.button("➡️ Dalej: Alfabet"): st.session_state.page = "Alphabet"; st.rerun()
 
-    # == ALPHABET ==
+    # == ALPHABET == (Keep as is)
     elif st.session_state.page == "Alphabet":
         st.title("🔤 Polski Alfabet / El Alfabeto Polaco")
         with st.container():
             st.markdown('<div class="content-box">', unsafe_allow_html=True)
             st.markdown("Polski alfabet z przykładami i wymową (uproszczoną).")
-            # --- Alphabet Table ---
             st.markdown("""
             | Litera | Nazwa | Wymowa (IPA approx.) | Przykład | Nota dla Hiszpanów |
             |---|---|---|---|---|
@@ -239,7 +229,6 @@ with body_col_main:
 
         st.subheader("👂 Ćwiczenie Wymowy / Ejercicio de Pronunciación")
         st.markdown("Wybierz słowo, które słyszysz (symulacja).")
-
         pairs = { "s / sz / ś": (["stop", "szok", "środa"], 2), "c / cz / ć": (["cena", "czekolada", "ćma"], 1), "z / rz / ź": (["zoo", "rzeka", "źle"], 0), "l / ł": (["lekcja", "ładny"], 1), "i / y": (["miły", "myły"], 0) }
         exercise_key = "alphabet_pronunciation"; q_num = 1
         if exercise_key not in st.session_state.feedback: st.session_state.feedback[exercise_key] = {}
@@ -261,7 +250,7 @@ with body_col_main:
              q_num += 1
         if st.button("➡️ Dalej: Słownictwo"): st.session_state.page = "Vocabulary & Phrases"; st.rerun()
 
-    # == VOCABULARY & PHRASES ==
+    # == VOCABULARY & PHRASES == (Logic including corrected try/except blocks and fill-in fix remains the same)
     elif st.session_state.page == "Vocabulary & Phrases":
         st.title("🗣️ Słownictwo i Zwroty")
         with st.container():
@@ -288,13 +277,9 @@ with body_col_main:
         with cols1[0]:
             for i, phrase in enumerate(polish_phrases):
                 current_selection = st.session_state[q1_key]['user_matches'].get(phrase, "")
-                # --- CORRECTED try/except block ---
                 sel_index = 0
-                try:
-                    sel_index = ([""] + shuffled_spanish).index(current_selection)
-                except ValueError:
-                    sel_index = 0
-                # --- END CORRECTION ---
+                try: sel_index = ([""] + shuffled_spanish).index(current_selection)
+                except ValueError: sel_index = 0
                 st.session_state[q1_key]['user_matches'][phrase] = st.selectbox(f"{i+1}. {phrase}", options=[""] + shuffled_spanish, key=f"{q1_key}_{i}", index=sel_index, label_visibility="visible")
         with cols1[1]: st.markdown("**Opcje:**"); st.table([[trans] for trans in shuffled_spanish])
         if st.button("Sprawdź dopasowanie", key=f"{q1_key}_check"):
@@ -328,7 +313,7 @@ with body_col_main:
             correct_count = 0; all_correct = True
             # --- CORRECTED list construction ---
             user_answers = [st.session_state[q2_key][i].strip() for i in range(len(solution))]
-            sol = solution # Alias
+            sol = solution
             filled_dialog = [
                 f"A: Dzień {'<span style=\'color:green; font-weight:600;\'>' + user_answers[0] + '</span>' if user_answers[0].lower() == sol[0].lower() else '<span style=\'color:red;\'>' + user_answers[0] + '</span>' + f' ({sol[0]})'}! Jak {'<span style=\'color:green; font-weight:600;\'>' + user_answers[1] + '</span>' if user_answers[1].lower() == sol[1].lower() else '<span style=\'color:red;\'>' + user_answers[1] + '</span>' + f' ({sol[1]})'} się nazywa?",
                 f"B: Dzień {'<span style=\'color:green; font-weight:600;\'>' + user_answers[2] + '</span>' if user_answers[2].lower() == sol[2].lower() else '<span style=\'color:red;\'>' + user_answers[2] + '</span>' + f' ({sol[2]})'}! {'<span style=\'color:green; font-weight:600;\'>' + user_answers[3] + '</span>' if user_answers[3].lower() == sol[3].lower() else '<span style=\'color:red;\'>' + user_answers[3] + '</span>' + f' ({sol[3]})'} Piotr Nowicki. Jak {'<span style=\'color:green; font-weight:600;\'>' + user_answers[4] + '</span>' if user_answers[4].lower() == sol[4].lower() else '<span style=\'color:red;\'>' + user_answers[4] + '</span>' + f' ({sol[4]})'} się nazywa?",
@@ -336,7 +321,7 @@ with body_col_main:
                 f"B: {'<span style=\'color:green; font-weight:600;\'>' + user_answers[5] + '</span>' if user_answers[5].lower() == sol[5].lower() else '<span style=\'color:red;\'>' + user_answers[5] + '</span>' + f' ({sol[5]})'} mi."
             ]
             # --- END CORRECTION ---
-            for i in range(len(solution)): # Check correctness
+            for i in range(len(solution)):
                 if user_answers[i].lower() == solution[i].lower(): correct_count +=1
                 else: all_correct = False
             st.markdown("<h5>Wyniki:</h5>" + "<br>".join(filled_dialog), unsafe_allow_html=True)
@@ -389,23 +374,64 @@ with body_col_main:
         st.subheader("Ćwiczenie: MÓWIĆ")
         exercise_key = "grammar_mowic";
         if exercise_key not in st.session_state: st.session_state[exercise_key] = {}
-        if 'inputs' not in st.session_state[exercise_key]: st.session_state[exercise_key]['inputs'] = {}
+        # Don't need 'inputs' sub-dict if reading directly from widget state
+        # if 'inputs' not in st.session_state[exercise_key]: st.session_state[exercise_key]['inputs'] = {} # REMOVE or comment out
         mowic_sentences = [ ("Czy ______ po polsku? (ty)", ["mówisz"]), ("______ po angielsku. (my)", ["mówimy"]), ("Oni nie ______ po francusku, ale ______ po polsku. (oni / oni)", ["mówią", "mówią"]), ("On ______ trochę po rosyjsku, ale ja nie ______. (on / ja)", ["mówi", "mówię"]), ("Czy ______ po niemiecku? (wy)", ["mówicie"]), ("One nie ______ po hiszpańsku. (one)", ["mówią"]), ("Czy ona ______ po polsku?", ["mówi"]), ("Nie ______ po włosku. (ja)", ["mówię"]) ]
-        for i in range(len(mowic_sentences)): q_key = f"{exercise_key}_{i}"; num_blanks = mowic_sentences[i][0].count("______");
-        if q_key not in st.session_state[exercise_key]['inputs']: st.session_state[exercise_key]['inputs'][q_key] = [""] * num_blanks
+
+        # Initialize state for widgets if not present
+        for i in range(len(mowic_sentences)):
+             q_key = f"{exercise_key}_{i}"
+             num_blanks = mowic_sentences[i][0].count("______")
+             if num_blanks == 1:
+                  if q_key not in st.session_state: st.session_state[q_key] = ""
+             elif num_blanks == 2:
+                  if f"{q_key}_a" not in st.session_state: st.session_state[f"{q_key}_a"] = ""
+                  if f"{q_key}_b" not in st.session_state: st.session_state[f"{q_key}_b"] = ""
+
+
+        # Display inputs, reading value directly from widget state key
         for i, (sentence, correct_forms) in enumerate(mowic_sentences):
             st.markdown('<div class="question-box">', unsafe_allow_html=True)
             q_key = f"{exercise_key}_{i}"; num_blanks = sentence.count("______"); prompt = sentence.replace("______", "_______")
-            if num_blanks == 1: st.session_state[exercise_key]['inputs'][q_key][0] = st.text_input(f"{i+1}. {prompt}", value=st.session_state[exercise_key]['inputs'][q_key][0], key=q_key, placeholder="Wpisz")
-            elif num_blanks == 2: cols_mowic = st.columns(2);
-            with cols_mowic[0]: st.session_state[exercise_key]['inputs'][q_key][0] = st.text_input(f"{i+1}a. {prompt} (1)", value=st.session_state[exercise_key]['inputs'][q_key][0], key=f"{q_key}_a", placeholder="Forma 1")
-            with cols_mowic[1]: st.session_state[exercise_key]['inputs'][q_key][1] = st.text_input(f"{i+1}b. {prompt} (2)", value=st.session_state[exercise_key]['inputs'][q_key][1], key=f"{q_key}_b", placeholder="Forma 2")
+            if num_blanks == 1:
+                # --- CORRECTED: Use widget key for value ---
+                st.text_input(f"{i+1}. {prompt}",
+                              value=st.session_state.get(q_key, ""), # Read from widget key
+                              key=q_key, # Assign unique key to widget
+                              placeholder="Wpisz")
+            elif num_blanks == 2:
+                 cols_mowic = st.columns(2);
+                 with cols_mowic[0]:
+                     # --- CORRECTED: Use widget key for value ---
+                     st.text_input(f"{i+1}a. {prompt} (1)",
+                                    value=st.session_state.get(f"{q_key}_a", ""), # Read from widget key
+                                    key=f"{q_key}_a", # Assign unique key
+                                    placeholder="Forma 1")
+                 with cols_mowic[1]:
+                     # --- CORRECTED: Use widget key for value ---
+                     st.text_input(f"{i+1}b. {prompt} (2)",
+                                    value=st.session_state.get(f"{q_key}_b", ""), # Read from widget key
+                                    key=f"{q_key}_b", # Assign unique key
+                                    placeholder="Forma 2")
             st.markdown('</div>', unsafe_allow_html=True)
+
         if st.button("Sprawdź MÓWIĆ", key=f"{exercise_key}_check"):
             all_correct_mowic = True; feedback_html_mowic = "<ul>"
             for i, (sentence, correct_forms_list) in enumerate(mowic_sentences):
-                q_key = f"{exercise_key}_{i}"; user_answers = [ans.strip().lower() for ans in st.session_state[exercise_key]['inputs'][q_key]]; correct_forms_list_lower = [f.lower() for f in correct_forms_list]
+                q_key = f"{exercise_key}_{i}"
+                num_blanks = sentence.count("______")
+                user_answers = []
+                # --- CORRECTED: Read directly from widget state ---
+                if num_blanks == 1:
+                    user_answers.append(st.session_state.get(q_key, "").strip().lower())
+                elif num_blanks == 2:
+                    user_answers.append(st.session_state.get(f"{q_key}_a", "").strip().lower())
+                    user_answers.append(st.session_state.get(f"{q_key}_b", "").strip().lower())
+                # --- END CORRECTION ---
+
+                correct_forms_list_lower = [f.lower() for f in correct_forms_list]
                 sentence_display = sentence; correct_in_sentence = True
+                # Feedback generation logic remains the same...
                 for j in range(len(correct_forms_list_lower)): user_ans = user_answers[j]; correct_ans = correct_forms_list_lower[j];
                 if user_ans == correct_ans: replacement = f"<span style='color:green; font-weight:600;'>{user_ans}</span>"
                 else: replacement = f"<span style='color:red;'>{user_ans}</span> (Popr: {correct_ans})"; correct_in_sentence = False; all_correct_mowic = False
@@ -421,7 +447,7 @@ with body_col_main:
             else: st.warning("Popraw błędy.")
 
         st.markdown('<div class="content-box">', unsafe_allow_html=True)
-        st.subheader("Inne Czasowniki i Notatki")
+        st.subheader("Inne Czasowniki i Notatki") # Content... (Keep as is)
         cols_verbs = st.columns(2)
         with cols_verbs[0]: st.markdown("**Nazywać się (llamarse)**"); st.markdown("""(ja) nazywam się | (ty) nazywasz się | (on/ona/ono) nazywa się | (my) nazywamy się | (wy) nazywacie się | (oni/one) nazywają się""")
         with cols_verbs[1]: st.markdown("**Mieć (tener)**"); st.markdown("""(ja) mam | (ty) masz | (on/ona/ono) ma | (my) mamy | (wy) macie | (oni/one) mają""")
@@ -430,7 +456,7 @@ with body_col_main:
         st.markdown('</div>', unsafe_allow_html=True)
         if st.button("➡️ Dalej: Wymowa"): st.session_state.page = "Pronunciation Practice"; st.rerun()
 
-    # == PRONUNCIATION PRACTICE ==
+    # == PRONUNCIATION PRACTICE == (Logic including corrected try/except blocks remains the same)
     elif st.session_state.page == "Pronunciation Practice":
         st.title("👂 Ćwiczenia Wymowy")
         st.markdown('<div class="content-box">', unsafe_allow_html=True)
@@ -468,7 +494,7 @@ with body_col_main:
         st.markdown('</div>', unsafe_allow_html=True)
         if st.button("➡️ Dalej: Dialogi"): st.session_state.page = "Dialogues & Context"; st.rerun()
 
-    # == DIALOGUES & CONTEXT ==
+    # == DIALOGUES & CONTEXT == (Logic including corrected try/except blocks remains the same)
     elif st.session_state.page == "Dialogues & Context":
         st.title("💬 Dialogi i Kontekst")
         st.markdown('<div class="content-box">', unsafe_allow_html=True)
@@ -490,7 +516,8 @@ with body_col_main:
         st.session_state[q_key][2] = st.text_input("Marek: ______. [2]", value=st.session_state[q_key][2], key=f"{q_key}_2")
         if st.button("Sprawdź Dialog 2", key=f"{q_key}_check"):
              correct_d2 = True; feedback_d2_html = "Wyniki:<ul>"
-             for i in range(len(solution_d2)): user_ans = st.session_state[q_key][i].strip(); correct_ans = solution_d2[i];
+             user_answers = [st.session_state[q_key][i].strip() for i in range(len(solution_d2))] # Get user answers
+             for i in range(len(solution_d2)): user_ans = user_answers[i]; correct_ans = solution_d2[i];
              if user_ans.lower() == correct_ans.lower(): feedback_d2_html += f"<li>Luka {i}: <span style='color:green;'>{user_ans}</span> ✅</li>"
              else: feedback_d2_html += f"<li>Luka {i}: <span style='color:red;'>{user_ans}</span> ❌ (Popr: {correct_ans})</li>"; correct_d2 = False
              feedback_d2_html += "</ul>"; st.markdown(feedback_d2_html, unsafe_allow_html=True)
