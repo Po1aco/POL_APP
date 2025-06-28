@@ -1,910 +1,1131 @@
-<!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Wedding Beverage Calculator</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
-    <!-- Chosen Palette: Warm Celebration -->
-    <!-- Application Structure Plan: The application is designed as a single-page, task-oriented dashboard. Instead of a linear report format, the structure is divided into four logical, navigable sections: 'Event Setup' (for core inputs like guest count), 'Consumption Plan' (for interactive adjustment of beverage preferences via sliders and charts), 'Shopping List' (for the final, calculated output), 'Dynamic Visualizer' (new p5.js component), and 'Best Practices' (for contextual advice). This structure was chosen to transform the static report into an active tool, guiding the user from input to output. The p5.js integration offers a unique, dynamic visual feedback mechanism. -->
-    <!-- Visualization & Content Choices: Guest Demographics -> HTML Sliders; Beverage Preferences -> Doughnut Charts + HTML Sliders; Event Scale -> p5.js Particles; Final Quantities -> Stat Cards + HTML Table; Cocktail Summary -> Tables for servings/ingredients; Best Practices -> HTML Accordion. All with JS/Tailwind. NO SVG/Mermaid. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
-    <style>
-        body {
-            background-color: #FDFBF8;
-            color: #4A4A4A;
-            font-family: 'Inter', sans-serif;
+// p5.js Wedding Beverage Calculator - Standalone Version
+// This sketch recreates the functionality of the original HTML/CSS/JS application
+// using only the p5.js library. All UI elements are drawn and managed in code.
+
+// --- GLOBAL CONFIGURATION & STATE ---
+
+// State object to hold all application data.
+// It's a direct port from the original JS logic.
+let state = {};
+
+// UI element registry and screen management
+let ui = {};
+let currentScreen = 'setup'; // Initial screen
+let activePhase = 'phase1'; // For the 'plan' screen
+let contentStartY = 120; // Increased vertical spacing
+
+// Color Palette (from original CSS)
+const colors = {
+    background: '#FDFBF8',
+    text: '#4A4A4A',
+    textLight: '#7a7a7a',
+    primary: '#d88c75', // Warm pink/orange
+    secondary: '#4c9b8e', // Teal
+    accent: '#E6DACE',
+    border: '#F0EBE3',
+    white: '#FFFFFF',
+    statCard: [230, 218, 206],
+    formula: '#2d5e56' // Dark teal for formulas
+};
+
+// Font configuration
+let headerFont = 'serif';
+let bodyFont = 'sans-serif';
+let formulaFont = 'monospace';
+
+
+// --- P5.JS SETUP & DRAW LOOPS ---
+
+function setup() {
+    createCanvas(windowWidth, windowHeight);
+    textFont(bodyFont);
+
+    // 1. Initialize application data (ported from original)
+    initializeStateData();
+
+    // 2. Create all UI elements for all screens
+    buildUI();
+
+    // 3. Run initial calculation to populate UI with default values
+    calculateAndRenderResults();
+}
+
+function draw() {
+    background(colors.background);
+
+    // Center the main content area
+    const contentWidth = min(1200, width - 40);
+    translate((width - contentWidth) / 2, 0);
+
+    // Draw common elements
+    drawHeader(contentWidth);
+    drawFooter(contentWidth);
+
+    // Draw the currently active screen
+    switch (currentScreen) {
+        case 'setup':
+            drawSetupScreen(contentWidth);
+            break;
+        case 'plan':
+            drawPlanScreen(contentWidth);
+            break;
+        case 'results':
+            drawResultsScreen(contentWidth);
+            break;
+        case 'visualizer':
+            drawVisualizerScreen(contentWidth);
+            break;
+        case 'formulas':
+            drawFormulasScreen(contentWidth);
+            break;
+        case 'insights':
+            drawInsightsScreen(contentWidth);
+            break;
+    }
+}
+
+
+// --- SCREEN DRAWING FUNCTIONS ---
+
+function drawHeader(w) {
+    // Header background
+    fill(colors.white);
+    noStroke();
+    rect(0, 0, w, 60);
+    stroke(colors.border);
+    line(0, 60, w, 60);
+
+    // --- Defensive Layout Logic ---
+    const buttonXPositions = Object.values(ui.navButtons).map(b => b.x);
+    const navBlockStartX = buttonXPositions.length > 0 ? min(buttonXPositions) : w;
+    const titleAvailableWidth = navBlockStartX - 20 - 20;
+
+    // Title
+    fill(colors.text);
+    textFont(headerFont);
+    textSize(24);
+    textAlign(LEFT, CENTER);
+
+    let titleString = "Wedding Beverage Planner";
+    if (textWidth(titleString) > titleAvailableWidth) {
+        titleString = "Beverage Planner";
+    }
+    if (textWidth(titleString) > titleAvailableWidth) {
+        titleString = "WBP";
+    }
+    text(titleString, 20, 30);
+    
+    // Navigation Buttons
+    Object.values(ui.navButtons).forEach(button => button.draw());
+}
+
+
+function drawFooter(w) {
+    fill(colors.textLight);
+    textFont(bodyFont);
+    textSize(12);
+    textAlign(CENTER, CENTER);
+    text('Interactive p5.js application generated from the "Comprehensive Wedding Beverage & Ice Calculation Template" report.', w / 2, height - 20);
+}
+
+function drawSectionHeader(title, subtitle, y, w) {
+    // Title
+    fill(colors.text);
+    textFont(headerFont);
+    textSize(36);
+    textAlign(CENTER, TOP);
+    text(title, w / 2, y);
+
+    // Subtitle
+    fill(colors.textLight);
+    textFont(bodyFont);
+    textSize(14);
+    rectMode(CENTER);
+    text(subtitle, w / 2, y + 50, w * 0.8, 100);
+    rectMode(CORNER);
+}
+
+function drawSetupScreen(w) {
+    let y = contentStartY;
+    drawSectionHeader(
+        "1. Event Setup",
+        "Configure the core details of your event. Use the sliders to adjust your guest list composition. These numbers form the foundation for all subsequent calculations.",
+        y, w
+    );
+    y += 150;
+
+    const colWidth = (w - 40) / 3;
+    const cardHeight = 350;
+
+    // Card 1: Guest Profile
+    drawCard(0, y, colWidth, cardHeight);
+    ui.setup.guestSliders.totalGuests.x = 20;
+    ui.setup.guestSliders.womenPercent.x = 20;
+    ui.setup.guestSliders.totalGuests.y = y + 100;
+    ui.setup.guestSliders.womenPercent.y = y + 170;
+    ui.setup.guestSliders.totalGuests.w = colWidth - 40;
+    ui.setup.guestSliders.womenPercent.w = colWidth - 40;
+    fill(colors.text);
+    textFont(headerFont);
+    textSize(20);
+    textAlign(LEFT, TOP);
+    text("Guest Profile", 20, y + 20);
+    ui.setup.guestSliders.totalGuests.draw();
+    ui.setup.guestSliders.womenPercent.draw();
+    drawGuestProfileText(y + 230, colWidth);
+
+    const x2 = colWidth + 20;
+    drawCard(x2, y, colWidth, cardHeight);
+    fill(colors.text);
+    textFont(headerFont);
+    textSize(20);
+    textAlign(LEFT, TOP);
+    text("Event Timeline", x2 + 20, y + 20);
+    drawTimelineInfo(x2 + 20, y + 70);
+
+    const x3 = (colWidth + 20) * 2;
+    drawCard(x3, y, colWidth, cardHeight);
+    fill(colors.text);
+    textFont(headerFont);
+    textSize(20);
+    textAlign(LEFT, TOP);
+    text("Serving Sizes (per Unit)", x3 + 20, y + 20);
+    drawServingSizes(x3 + 20, y + 70, colWidth - 40);
+}
+
+function drawPlanScreen(w) {
+    let y = contentStartY;
+    drawSectionHeader(
+        "2. Consumption Plan",
+        "Visualize and adjust beverage preferences for each event phase. Use the tabs to switch phases and sliders to fine-tune the drink distribution. Percentages will automatically balance.",
+        y, w
+    );
+    y += 150;
+
+    drawCard(0, y, w, 550);
+
+    Object.values(ui.plan.phaseTabs).forEach(button => button.draw());
+
+    const colWidth = (w - 80) / 3;
+    const xPositions = [20, colWidth + 50, (colWidth + 30) * 2 + 20];
+
+    ['women', 'men', 'nonDrinkers'].forEach((group, i) => {
+        let x = xPositions[i];
+        let groupTitle = group.charAt(0).toUpperCase() + group.slice(1);
+        if (group === 'nonDrinkers') groupTitle = "Non-Drinker Preferences";
+        else groupTitle += "'s Preferences";
+
+        fill(colors.text);
+        textFont(headerFont);
+        textSize(18);
+        textAlign(CENTER, TOP);
+        text(groupTitle, x + colWidth / 2, y + 90);
+
+        ui.plan.charts[activePhase][group].x = x + colWidth / 2;
+        ui.plan.charts[activePhase][group].y = y + 200;
+        ui.plan.charts[activePhase][group].draw();
+
+        let sliderY = y + 330;
+        ui.plan.sliders[activePhase][group].forEach(slider => {
+            slider.x = x;
+            slider.y = sliderY;
+            slider.w = colWidth;
+            slider.draw();
+            sliderY += 45;
+        });
+    });
+}
+
+function drawResultsScreen(w) {
+    let y = contentStartY;
+    drawSectionHeader(
+        "3. Shopping List & Summary",
+        "Here is your dynamically calculated shopping list. This summary updates in real-time based on all your inputs, giving you a clear and actionable list of what to buy.",
+        y, w
+    );
+    y += 150;
+
+    const statCardWidth = (w - 60) / 4;
+    Object.values(ui.results.statDisplays).forEach((display, i) => {
+        let x = i * (statCardWidth + 20);
+        drawCard(x, y, statCardWidth, 100, colors.statCard);
+        fill(colors.text);
+        textFont(headerFont);
+        textSize(18);
+        textAlign(CENTER, CENTER);
+        text(display.label, x + statCardWidth / 2, y + 25);
+        textFont(headerFont);
+        textSize(36);
+        text(display.value, x + statCardWidth / 2, y + 65);
+    });
+
+    y += 140;
+
+    drawCard(0, y, w, 350);
+    fill(colors.text);
+    textFont(headerFont);
+    textSize(20);
+    textAlign(LEFT, TOP);
+    text("Overall Shopping List", 20, y + 20);
+    drawTable(20, y + 60, w - 40, ui.results.shoppingList);
+
+    y += 390;
+
+    drawCard(0, y, w, 250);
+    fill(colors.text);
+    textFont(headerFont);
+    textSize(20);
+    textAlign(LEFT, TOP);
+    text("Cocktail Summary", 20, y + 20);
+    drawCocktailSummary(20, y + 60, w - 40);
+}
+
+function drawVisualizerScreen(w) {
+    let y = contentStartY;
+    drawSectionHeader(
+        "Dynamic Event Visualizer",
+        "An abstract representation of your event's beverage plan. The number of particles reflects the total estimated drinks, with colors indicating alcoholic (warm) vs. non-alcoholic (cool) options.",
+        y, w
+    );
+    y += 150;
+
+    drawCard(0, y, w, height - y - 80);
+
+    push();
+    translate(0, y);
+    ui.visualizer.system.run();
+    pop();
+}
+
+function drawFormulasScreen(w) {
+    let y = contentStartY;
+    drawSectionHeader(
+        "Calculation Formulas",
+        "This section explains the core formulas used by the planner to generate the results. The calculations are based on standard event planning principles and the data from the source report.",
+        y, w
+    );
+    y += 150;
+
+    let accordionY = y;
+    const maxW = min(w, 800); // Center the accordions
+    const startX = (w - maxW) / 2;
+    
+    ui.formulas.accordions.forEach(accordion => {
+        accordion.w = maxW;
+        accordion.x = startX;
+        accordion.y = accordionY;
+        accordion.draw();
+        accordionY += accordion.getHeight();
+    });
+}
+
+
+function drawInsightsScreen(w) {
+    let y = contentStartY;
+    drawSectionHeader(
+        "Best Practices",
+        "Planning a wedding involves more than just numbers. Here are some key insights from the source report to ensure your beverage service is a complete success.",
+        y, w
+    );
+    y += 150;
+
+    let accordionY = y;
+    const maxW = min(w, 800); // Center the accordions
+    const startX = (w - maxW) / 2;
+    
+    ui.insights.accordions.forEach(accordion => {
+        accordion.w = maxW;
+        accordion.x = startX;
+        accordion.y = accordionY;
+        accordion.draw();
+        accordionY += accordion.getHeight();
+    });
+}
+
+
+// --- UI HELPER DRAWING FUNCTIONS ---
+
+function drawCard(x, y, w, h, c = colors.white) {
+    fill(c);
+    stroke(colors.border);
+    strokeWeight(1);
+    rect(x, y, w, h, 8);
+}
+
+function drawGuestProfileText(startY, cardW) {
+    const { total, women, men, women_drinkers, men_drinkers } = state.guests;
+    const women_non_drinkers = Math.max(0, women - women_drinkers);
+    const men_non_drinkers = Math.max(0, men - men_drinkers);
+
+    textAlign(LEFT, TOP);
+    textFont(bodyFont);
+    textSize(12);
+    fill(colors.textLight);
+
+    let y = startY;
+    const x = 20;
+
+    stroke(colors.border);
+    line(x, y - 10, x + cardW - 40, y - 10);
+
+    text("Women: ", x, y);
+    fill(colors.text);
+    text(`${women}`, x + 50, y);
+    fill(colors.textLight);
+    text(`(${women_drinkers} drinkers, ${women_non_drinkers} non-drinkers)`, x + 75, y);
+    y += 20;
+
+    text("Men: ", x, y);
+    fill(colors.text);
+    text(`${men}`, x + 50, y);
+    fill(colors.textLight);
+    text(`(${men_drinkers} drinkers, ${men_non_drinkers} non-drinkers)`, x + 75, y);
+}
+
+function drawTimelineInfo(x, y) {
+    const timeline = [
+        { id: "P1", title: "Friday Evening Reception", time: "5 PM - 2 AM (9 hours)" },
+        { id: "P2", title: "Saturday Daytime Grill", time: "10 AM - 5 PM (7 hours)" },
+        { id: "P3", title: "Saturday Evening Party", time: "5 PM - 2 AM (9 hours)" }
+    ];
+
+    let currentY = y;
+    timeline.forEach(item => {
+        fill(colors.accent);
+        noStroke();
+        ellipse(x + 20, currentY + 15, 40, 40);
+        fill(colors.text);
+        textAlign(CENTER, CENTER);
+        textFont(bodyFont);
+        textSize(14);
+        text(item.id, x + 20, currentY + 15);
+
+        textAlign(LEFT, TOP);
+        fill(colors.text);
+        textSize(14);
+        text(item.title, x + 55, currentY);
+        fill(colors.textLight);
+        textSize(12);
+        text(item.time, x + 55, currentY + 20);
+
+        currentY += 60;
+    });
+}
+
+function drawServingSizes(x, y, w) {
+    let currentY = y;
+    textAlign(LEFT, TOP);
+    textFont(bodyFont);
+    textSize(12);
+
+    Object.entries(state.servings).forEach(([name, data]) => {
+        if (currentY > y + 250) return;
+        fill(colors.textLight);
+        text(name, x, currentY);
+        textAlign(RIGHT, TOP);
+        fill(colors.text);
+        text(data.serves.toFixed(2), x + w, currentY);
+        textAlign(LEFT, TOP);
+        currentY += 20;
+    });
+}
+
+function drawTable(x, y, w, data) {
+    const headerY = y;
+    const rowHeight = 30;
+    const col1X = x + 15;
+    const col2X = x + w - 15;
+
+    fill(colors.textLight);
+    textFont(bodyFont);
+    textSize(12);
+    textAlign(LEFT, CENTER);
+    text("BEVERAGE / INGREDIENT", col1X, headerY);
+    textAlign(RIGHT, CENTER);
+    text("BOTTLES/UNITS TO BUY", col2X, headerY);
+    stroke(colors.border);
+    line(x, y + 15, x + w, y + 15);
+
+    let rowY = y + 20;
+    for (const item of data) {
+        if (rowY > y + 270) return;
+        fill(colors.text);
+        textSize(14);
+        textAlign(LEFT, CENTER);
+        text(item.name, col1X, rowY + rowHeight / 2);
+        textAlign(RIGHT, CENTER);
+        textFont(headerFont);
+        text(item.units, col2X, rowY + rowHeight / 2);
+        textFont(bodyFont);
+        rowY += rowHeight;
+    }
+}
+
+function drawCocktailSummary(x, y, w) {
+    const halfW = w / 2 - 20;
+
+    fill(colors.textLight);
+    textFont(headerFont);
+    textSize(16);
+    textAlign(LEFT, TOP);
+    text("Total Cocktail Servings", x, y);
+
+    let textY = y + 30;
+    textFont(bodyFont);
+    textSize(14);
+    fill(colors.text);
+    text(`Friday Reception:  ${ui.results.cocktailServings.phase1}`, x, textY);
+    text(`Saturday Grill:      ${ui.results.cocktailServings.phase2}`, x, textY + 25);
+    text(`Saturday Party:      ${ui.results.cocktailServings.phase3}`, x, textY + 50);
+
+    stroke(colors.border);
+    line(x, textY + 80, x + halfW, textY + 80);
+
+    textFont(headerFont);
+    textSize(18);
+    text(`Grand Total: ${ui.results.cocktailServings.grandTotal} servings`, x, textY + 95);
+
+    const tableX = x + w / 2 + 20;
+    const tableW = halfW;
+    fill(colors.textLight);
+    textFont(headerFont);
+    textSize(16);
+    textAlign(LEFT, TOP);
+    text("Cocktail Ingredient Bottles", tableX, y);
+
+    const headerY = y + 30;
+    const rowHeight = 25;
+    fill(colors.textLight);
+    textFont(bodyFont);
+    textSize(12);
+    textAlign(LEFT, CENTER);
+    text("INGREDIENT", tableX, headerY);
+    textAlign(RIGHT, CENTER);
+    text("BOTTLES/UNITS", tableX + tableW, headerY);
+    stroke(colors.border);
+    line(tableX, y + 45, tableX + tableW, y + 45);
+
+    let rowY = y + 50;
+    for (const item of ui.results.cocktailIngredients) {
+        if (rowY > y + 180) return;
+        fill(colors.text);
+        textSize(14);
+        textAlign(LEFT, CENTER);
+        text(item.name, tableX, rowY + rowHeight / 2);
+        textAlign(RIGHT, CENTER);
+        textFont(headerFont);
+        text(item.units, tableX + tableW, rowY + rowHeight / 2);
+        textFont(bodyFont);
+        rowY += rowHeight;
+    }
+}
+
+
+// --- EVENT HANDLERS ---
+
+function mousePressed() {
+    const contentWidth = min(1200, width - 40);
+    const startX = (width - contentWidth) / 2;
+
+    for (const key in ui.navButtons) {
+        if (ui.navButtons[key].isClicked(mouseX - startX, mouseY)) {
+            Object.values(ui.navButtons).forEach(b => b.active = false);
+            ui.navButtons[key].active = true;
+            currentScreen = key;
+            return;
         }
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Playfair+Display:wght@700&display=swap');
-        h1, h2, h3 {
-            font-family: 'Playfair Display', serif;
-        }
-        .nav-link {
-            transition: all 0.3s ease;
-            color: #7a7a7a;
-        }
-        .nav-link:hover, .nav-link.active {
-            color: #d88c75;
-            transform: translateY(-2px);
-        }
-        .card {
-            background-color: #FFFFFF;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-            border: 1px solid #F0EBE3;
-        }
-        .slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 1rem;
-            height: 1rem;
-            background: #d88c75;
-            cursor: pointer;
-            border-radius: 9999px;
-        }
-        .slider::-moz-range-thumb {
-            width: 1rem;
-            height: 1rem;
-            background: #d88c75;
-            cursor: pointer;
-            border-radius: 9999px;
-        }
-        .tab-button {
-            transition: all 0.3s ease;
-        }
-        .tab-button.active {
-            background-color: #d88c75;
-            color: white;
-            box-shadow: 0 2px 4px rgb(0 0 0 / 0.1);
-        }
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 320px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 320px;
-            max-height: 400px;
-        }
-        .accordion-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-in-out;
-        }
-        .stat-card {
-            background: linear-gradient(145deg, #e6dace, #fffbe8);
-        }
-    </style>
-</head>
-<body class="antialiased">
+    }
 
-    <header class="bg-white/80 backdrop-blur-sm sticky top-0 z-50 border-b border-stone-200">
-        <nav class="container mx-auto px-4 py-3 flex justify-between items-center">
-            <h1 class="text-xl md:text-2xl font-bold text-stone-700">Wedding Beverage Planner</h1>
-            <div class="hidden md:flex space-x-6 lg:space-x-8 text-sm font-medium">
-                <a href="#setup" class="nav-link">Event Setup</a>
-                <a href="#plan" class="nav-link">Consumption Plan</a>
-                <a href="#results" class="nav-link">Shopping List</a>
-                <a href="#dynamic-visualizer" class="nav-link">Visualizer</a>
-                <a href="#insights" class="nav-link">Best Practices</a>
-            </div>
-            <button id="mobile-menu-button" class="md:hidden p-2 rounded-md text-stone-600 hover:bg-stone-100">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
-            </button>
-        </nav>
-        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-stone-200">
-            <a href="#setup" class="block py-2 px-4 text-sm text-stone-700 hover:bg-stone-50 mobile-nav-link">Event Setup</a>
-            <a href="#plan" class="block py-2 px-4 text-sm text-stone-700 hover:bg-stone-50 mobile-nav-link">Consumption Plan</a>
-            <a href="#results" class="block py-2 px-4 text-sm text-stone-700 hover:bg-stone-50 mobile-nav-link">Shopping List</a>
-            <a href="#dynamic-visualizer" class="block py-2 px-4 text-sm text-stone-700 hover:bg-stone-50 mobile-nav-link">Visualizer</a>
-            <a href="#insights" class="block py-2 px-4 text-sm text-stone-700 hover:bg-stone-50 mobile-nav-link">Best Practices</a>
-        </div>
-    </header>
-
-    <main class="container mx-auto px-4 py-8 md:py-12">
-        <section id="setup" class="mb-16 scroll-mt-24">
-            <h2 class="text-3xl md:text-4xl font-bold text-center mb-2 text-stone-800">1. Event Setup</h2>
-            <p class="text-center text-stone-600 mb-10 max-w-2xl mx-auto">This section allows you to configure the core details of your event. Use the sliders to adjust your guest list composition. These numbers form the foundation for all subsequent calculations, providing a tailored beverage estimate based on who will be celebrating with you.</p>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div class="card p-6 md:col-span-2 lg:col-span-1">
-                    <h3 class="font-bold text-xl mb-4 text-stone-700">Guest Profile</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label for="totalGuests" class="font-medium text-sm">Total Guests: <span id="totalGuestsValue" class="font-bold text-stone-800">28</span></label>
-                            <input type="range" id="totalGuests" min="1" max="300" value="28" class="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer slider">
-                        </div>
-                        <div>
-                            <label for="women_percent" class="font-medium text-sm">Gender Split: <span id="womenPercentValue" class="font-bold text-[#d88c75]">50%</span> Women / <span id="menPercentValue" class="font-bold text-[#4c9b8e]">50%</span> Men</label>
-                            <input type="range" id="women_percent" min="0" max="100" value="50" class="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer slider">
-                        </div>
-                         <div class="text-sm text-stone-600 pt-2 border-t border-stone-100">
-                            <p>Women: <span id="womenCount" class="font-bold">14</span> (<span id="womenDrinkersCount" class="font-bold">10</span> drinkers, <span id="womenNonDrinkersCount" class="font-bold">4</span> non-drinkers)</p>
-                            <p>Men: <span id="menCount" class="font-bold">14</span> (<span id="menDrinkersCount" class="font-bold">11</span> drinkers, <span id="menNonDrinkersCount" class="font-bold">3</span> non-drinkers)</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card p-6">
-                    <h3 class="font-bold text-xl mb-4 text-stone-700">Event Timeline</h3>
-                    <p class="text-sm text-stone-600 mb-4">The event is broken into three distinct phases, each with its own duration and consumption patterns, as defined in the source report.</p>
-                    <div class="space-y-4">
-                        <div class="flex items-center space-x-4">
-                            <div class="flex-shrink-0 bg-[#E6DACE] rounded-full h-12 w-12 flex items-center justify-center font-bold text-stone-700">P1</div>
-                            <div>
-                                <p class="font-bold">Friday Evening Reception</p>
-                                <p class="text-sm text-stone-600">5 PM - 2 AM (9 hours)</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-4">
-                            <div class="flex-shrink-0 bg-[#E6DACE] rounded-full h-12 w-12 flex items-center justify-center font-bold text-stone-700">P2</div>
-                            <div>
-                                <p class="font-bold">Saturday Daytime Grill</p>
-                                <p class="text-sm text-stone-600">10 AM - 5 PM (7 hours)</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-4">
-                            <div class="flex-shrink-0 bg-[#E6DACE] rounded-full h-12 w-12 flex items-center justify-center font-bold text-stone-700">P3</div>
-                            <div>
-                                <p class="font-bold">Saturday Evening Party</p>
-                                <p class="text-sm text-stone-600">5 PM - 2 AM (9 hours)</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card p-6">
-                    <h3 class="font-bold text-xl mb-4 text-stone-700">Serving Sizes (per Unit)</h3>
-                    <p class="text-sm text-stone-600 mb-4">This is a reference for how many standard servings are in each bottle/unit, based on the report.</p>
-                    <div class="h-64 overflow-y-auto pr-2 text-sm">
-                        <ul id="servingSizesList" class="space-y-2"></ul>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="plan" class="mb-16 scroll-mt-24">
-            <h2 class="text-3xl md:text-4xl font-bold text-center mb-2 text-stone-800">2. Consumption Plan</h2>
-            <p class="text-center text-stone-600 mb-10 max-w-2xl mx-auto">This is the core interactive part of the planner. Here you can visualize and adjust the beverage preferences for each phase of your event. Use the tabs to switch between phases and the sliders to fine-tune the drink distribution for each group. The charts will update instantly to reflect your changes, and the percentages will automatically balance to always sum to 100%.</p>
-
-            <div class="card p-6">
-                <div class="mb-6 border-b border-stone-200">
-                    <div class="flex space-x-2 md:space-x-4" id="phaseTabs">
-                        <button data-phase="phase1" class="tab-button px-4 py-2 rounded-t-lg font-medium text-sm md:text-base active">Friday Reception</button>
-                        <button data-phase="phase2" class="tab-button px-4 py-2 rounded-t-lg font-medium text-sm md:text-base">Saturday Grill</button>
-                        <button data-phase="phase3" class="tab-button px-4 py-2 rounded-t-lg font-medium text-sm md:text-base">Saturday Party</button>
-                    </div>
-                </div>
-
-                <div id="phaseContent" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                </div>
-            </div>
-        </section>
-
-        <section id="results" class="mb-16 scroll-mt-24">
-            <h2 class="text-3xl md:text-4xl font-bold text-center mb-2 text-stone-800">3. Shopping List & Summary</h2>
-            <p class="text-center text-stone-600 mb-10 max-w-2xl mx-auto">Here is your dynamically calculated shopping list. This summary updates in real-time based on your inputs in the sections above, giving you a clear and actionable list of what to buy for your celebration.</p>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-                <div class="card stat-card p-6 flex flex-col items-center justify-center text-center">
-                    <h3 class="font-bold text-lg text-stone-700">Total Drinks</h3>
-                    <p id="totalDrinksResult" class="text-4xl font-bold text-stone-800">0</p>
-                </div>
-                <div class="card stat-card p-6 flex flex-col items-center justify-center text-center">
-                    <h3 class="font-bold text-lg text-stone-700">Alcoholic Servings</h3>
-                    <p id="totalAlcoholicDrinksResult" class="text-4xl font-bold text-stone-800">0</p>
-                </div>
-                <div class="card stat-card p-6 flex flex-col items-center justify-center text-center">
-                    <h3 class="font-bold text-lg text-stone-700">Non-Alc Servings</h3>
-                    <p id="totalNonAlcoholicDrinksResult" class="text-4xl font-bold text-stone-800">0</p>
-                </div>
-                <div class="card stat-card p-6 flex flex-col items-center justify-center text-center">
-                    <h3 class="font-bold text-lg text-stone-700">Ice Required</h3>
-                    <p class="text-4xl font-bold text-stone-800"><span id="iceRequiredResult">0</span> kg</p>
-                </div>
-            </div>
-
-            <div class="card p-6">
-                <h3 class="font-bold text-xl mb-4 text-stone-700">Overall Shopping List</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead class="border-b-2 border-stone-200 text-sm text-stone-600 uppercase">
-                            <tr>
-                                <th class="py-3 px-4">Beverage / Ingredient</th>
-                                <th class="py-3 px-4 text-right">Bottles/Units to Buy</th>
-                            </tr>
-                        </thead>
-                        <tbody id="shoppingListBody">
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="card p-6 mt-8">
-                <h3 class="font-bold text-xl mb-4 text-stone-700">Cocktail Summary</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div>
-                        <h4 class="font-semibold text-lg text-stone-600 mb-2">Total Cocktail Servings</h4>
-                        <ul class="list-disc list-inside text-sm text-stone-600 space-y-1" id="cocktailServingsByPhaseList">
-                            <li>Friday Reception: <span id="cocktailServingsPhase1" class="font-bold">0</span> servings</li>
-                            <li>Saturday Grill: <span id="cocktailServingsPhase2" class="font-bold">0</span> servings</li>
-                            <li>Saturday Party: <span id="cocktailServingsPhase3" class="font-bold">0</span> servings</li>
-                        </ul>
-                        <p class="mt-3 text-lg font-bold text-stone-800">Grand Total: <span id="cocktailServingsGrandTotal">0</span> servings</p>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold text-lg text-stone-600 mb-2">Cocktail Ingredient Bottles Needed</h4>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left">
-                                <thead class="border-b-2 border-stone-200 text-sm text-stone-600 uppercase">
-                                    <tr>
-                                        <th class="py-2 px-3">Ingredient</th>
-                                        <th class="py-2 px-3 text-right">Bottles/Units</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="cocktailIngredientsBody">
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="dynamic-visualizer" class="mb-16 scroll-mt-24">
-            <h2 class="text-3xl md:text-4xl font-bold text-center mb-2 text-stone-800">Dynamic Event Visualizer</h2>
-            <p class="text-center text-stone-600 mb-10 max-w-2xl mx-auto">Observe a dynamic visualization that subtly reacts to your event's scale and consumption patterns, adding an engaging visual dimension to your planning. The number of particles reflects the total estimated drinks, with colors indicating alcoholic (reddish) vs. non-alcoholic (greenish) options.</p>
-            <div class="card p-6 flex justify-center items-center">
-                <div id="p5-canvas-container" class="w-full h-96 relative overflow-hidden rounded-lg">
-                    <!-- p5.js canvas will be injected here -->
-                </div>
-            </div>
-        </section>
-
-        <section id="insights" class="scroll-mt-24">
-            <h2 class="text-3xl md:text-4xl font-bold text-center mb-2 text-stone-800">4. Best Practices</h2>
-            <p class="text-center text-stone-600 mb-10 max-w-2xl mx-auto">Planning a wedding involves more than just numbers. Here are some key insights from the source report to ensure your beverage service is a complete success.</p>
-            <div id="accordion" class="max-w-3xl mx-auto space-y-4">
-            </div>
-        </section>
-
-    </main>
-
-    <footer class="text-center py-8 mt-12 border-t border-stone-200">
-        <p class="text-sm text-stone-500">Interactive application generated from the "Comprehensive Wedding Beverage & Ice Calculation Template" report.</p>
-    </footer>
-
-    <script>
-        // Expose state globally for p5.js to access
-        window.appState = {
-            visualizerData: { // Initialize with default values for p5.js
-                totalDrinks: 0,
-                alcoholicDrinks: 0,
-                nonAlcoholicDrinks: 0
+    switch (currentScreen) {
+        case 'plan':
+            for (const key in ui.plan.phaseTabs) {
+                if (ui.plan.phaseTabs[key].isClicked(mouseX - startX, mouseY)) {
+                    Object.values(ui.plan.phaseTabs).forEach(b => b.active = false);
+                    ui.plan.phaseTabs[key].active = true;
+                    activePhase = key;
+                    return;
+                }
             }
+            break;
+        case 'formulas':
+            ui.formulas.accordions.forEach(accordion => {
+                accordion.handleClick(mouseX - startX, mouseY);
+            });
+            break;
+        case 'insights':
+            ui.insights.accordions.forEach(accordion => {
+                accordion.handleClick(mouseX - startX, mouseY);
+            });
+            break;
+    }
+}
+
+function mouseDragged() {
+    const contentWidth = min(1200, width - 40);
+    const startX = (width - contentWidth) / 2;
+
+    if (currentScreen === 'setup') {
+        Object.values(ui.setup.guestSliders).forEach(slider => {
+            slider.handleDrag(mouseX - startX, mouseY);
+        });
+        updateGuestProfile();
+        calculateAndRenderResults();
+    } else if (currentScreen === 'plan') {
+        ui.plan.sliders[activePhase].women.forEach(s => s.handleDrag(mouseX - startX, mouseY));
+        ui.plan.sliders[activePhase].men.forEach(s => s.handleDrag(mouseX - startX, mouseY));
+        ui.plan.sliders[activePhase].nonDrinkers.forEach(s => s.handleDrag(mouseX - startX, mouseY));
+    }
+}
+
+function mouseReleased() {
+    if (currentScreen === 'setup') {
+        Object.values(ui.setup.guestSliders).forEach(slider => slider.release());
+    } else if (currentScreen === 'plan') {
+        ui.plan.sliders[activePhase].women.forEach(s => s.release());
+        ui.plan.sliders[activePhase].men.forEach(s => s.release());
+        ui.plan.sliders[activePhase].nonDrinkers.forEach(s => s.release());
+    }
+}
+
+function windowResized() {
+    resizeCanvas(windowWidth, windowHeight);
+    buildUI();
+    calculateAndRenderResults();
+}
+
+// --- UI ELEMENT CLASSES ---
+
+class Button {
+    constructor(x, y, w, h, label, active = false) {
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.h = h;
+        this.label = label;
+        this.active = active;
+    }
+
+    draw() {
+        let bgColor = this.active ? colors.primary : colors.white;
+        let textColor = this.active ? colors.white : colors.textLight;
+
+        if (this.isHovered(mouseX - (width - min(1200, width - 40)) / 2, mouseY)) {
+            if (!this.active) {
+                bgColor = '#f7f5f2';
+                textColor = colors.primary;
+            }
+        }
+
+        noStroke();
+        fill(bgColor);
+        rect(this.x, this.y, this.w, this.h, 5); // Added slight border radius
+
+        fill(textColor);
+        textAlign(CENTER, CENTER);
+        textSize(14);
+        text(this.label, this.x + this.w / 2, this.y + this.h / 2);
+    }
+
+    isHovered(mx, my) {
+        return mx > this.x && mx < this.x + this.w && my > this.y && my < this.y + this.h;
+    }
+
+    isClicked(mx, my) {
+        return this.isHovered(mx, my);
+    }
+}
+
+class Slider {
+    constructor(x, y, w, h, label, minVal, maxVal, initialVal, onChange) {
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.h = h;
+        this.label = label;
+        this.minVal = minVal;
+        this.maxVal = maxVal;
+        this.value = initialVal;
+        this.onChange = onChange;
+
+        this.handleW = 16;
+        this.isDragging = false;
+    }
+
+    draw() {
+        const handleX = map(this.value, this.minVal, this.maxVal, this.x, this.x + this.w);
+
+        noStroke();
+        fill(220);
+        rect(this.x, this.y + this.h / 2 - 2, this.w, 4, 2);
+        fill(colors.primary);
+        rect(this.x, this.y + this.h / 2 - 2, handleX - this.x, 4, 2);
+
+        stroke(colors.border);
+        fill(colors.primary);
+        ellipse(handleX, this.y + this.h / 2, this.handleW, this.handleW);
+
+        fill(colors.text);
+        textAlign(LEFT, CENTER);
+        textSize(14);
+        text(this.label, this.x, this.y - 10);
+        textAlign(RIGHT, CENTER);
+        text(round(this.value), this.x + this.w, this.y - 10);
+    }
+
+    handleDrag(mx, my) {
+        const handleX = map(this.value, this.minVal, this.maxVal, this.x, this.x + this.w);
+        if (mouseIsPressed && !this.isDragging) {
+            if (dist(mx, my, handleX, this.y + this.h / 2) < this.handleW) {
+                this.isDragging = true;
+            }
+        }
+
+        if (this.isDragging) {
+            let newValue = map(mx, this.x, this.x + this.w, this.minVal, this.maxVal);
+            newValue = constrain(newValue, this.minVal, this.maxVal);
+            if (abs(this.value - newValue) > 0.1) {
+                this.value = newValue;
+                if (this.onChange) this.onChange(this.value);
+            }
+        }
+    }
+
+    release() {
+        this.isDragging = false;
+    }
+}
+
+class DoughnutChart {
+    constructor(x, y, radius, data) {
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+        this.data = data;
+    }
+
+    updateData(newData) {
+        this.data = newData;
+    }
+
+    draw() {
+        const total = this.data.values.reduce((sum, val) => sum + val, 0);
+        if (total === 0) return;
+
+        let lastAngle = -HALF_PI;
+        for (let i = 0; i < this.data.values.length; i++) {
+            const val = this.data.values[i];
+            const angle = (val / total) * TWO_PI;
+            fill(this.data.colors[i % this.data.colors.length]);
+            noStroke();
+            arc(this.x, this.y, this.radius * 2, this.radius * 2, lastAngle, lastAngle + angle, PIE);
+            lastAngle += angle;
+        }
+
+        fill(colors.white);
+        ellipse(this.x, this.y, this.radius, this.radius);
+    }
+}
+
+class AccordionItem {
+    constructor(x, y, w, title, contentLines) {
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.title = title;
+        this.contentLines = contentLines; // Expects an array of {text, type: 'normal'/'formula'}
+        this.isExpanded = false;
+        this.headerHeight = 50;
+    }
+
+    getHeight() {
+        if (!this.isExpanded) {
+            return this.headerHeight + 10;
+        }
+        let contentH = 20; // Initial padding
+        this.contentLines.forEach(line => {
+            textSize(14);
+            const textW = textWidth(line.text);
+            contentH += ceil(textW / (this.w - 40)) * 20 + 5; // Height per line + small gap
+        });
+        return this.headerHeight + contentH;
+    }
+
+    draw() {
+        drawCard(this.x, this.y, this.w, this.getHeight() - 10, colors.white);
+
+        fill(colors.text);
+        textFont(headerFont);
+        textSize(16);
+        textAlign(LEFT, CENTER);
+        text(this.title, this.x + 20, this.y + this.headerHeight / 2);
+
+        push();
+        translate(this.x + this.w - 30, this.y + this.headerHeight / 2);
+        if (this.isExpanded) rotate(PI);
+        fill(colors.textLight);
+        noStroke();
+        triangle(0, -5, -5, 5, 5, 5);
+        pop();
+
+        if (this.isExpanded) {
+            let lineY = this.y + this.headerHeight + 15;
+            this.contentLines.forEach(line => {
+                if (line.type === 'formula') {
+                    fill(colors.formula);
+                    textFont(formulaFont);
+                } else {
+                    fill(colors.textLight);
+                    textFont(bodyFont);
+                }
+                textSize(14);
+                textAlign(LEFT, TOP);
+                text(line.text, this.x + 20, lineY, this.w - 40);
+                const textW = textWidth(line.text);
+                lineY += ceil(textW / (this.w - 40)) * 20 + 5;
+            });
+        }
+    }
+
+    handleClick(mx, my) {
+        if (mx > this.x && mx < this.x + this.w && my > this.y && my < this.y + this.headerHeight) {
+            this.isExpanded = !this.isExpanded;
+        }
+    }
+}
+
+class ParticleSystem {
+    constructor() {
+        this.particles = [];
+        this.colors = {
+            alcoholic: color(216, 140, 117, 180),
+            nonAlcoholic: color(76, 155, 142, 180)
         };
+    }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const initialData = {
-                guests: {
-                    total: 28,
-                    women: 14,
-                    men: 14,
-                    women_drinkers: 10,
-                    men_drinkers: 11,
-                },
-                // Removed "Red Wine" and "Tonic" from servings data
-                servings: {
-                    "Prosecco": { size: 750, serves: 5 },
-                    "White Wine": { size: 750, serves: 5 },
-                    "Whiskey": { size: 750, serves: 17 },
-                    "Beer": { size: 500, serves: 1 },
-                    "Aperol": { size: 1000, serves: 17 },
-                    "Coca Cola": { size: 2000, serves: 12 },
-                    "Ginger Ale": { size: 2000, serves: 12 },
-                    "Soda": { size: 2000, serves: 67 },
-                    "White Rum": { size: 750, serves: 17 },
-                    "Non-alcoholic beer": { size: 500, serves: 1 },
-                    "Prosecco 0%": { size: 750, serves: 5 },
-                    "Lime Juice": { size: 1000, serves: 45 },
-                    "Simple Syrup": { size: 1000, serves: 67 },
-                    "Elderflower Liqueur": { size: 750, serves: 12.68 }, // Kept original calculated value
-                },
-                phases: {
-                    phase1: {
-                        name: "Friday Evening Reception",
-                        duration: 9,
-                        alcoholicRate: (2 + 8 * 1) / 9, // 1.11
-                        nonAlcoholicRate: 1,
-                        preferences: {
-                            // Rebalanced percentages after removing Red Wine
-                            women: { "Prosecco": 48, "White Wine": 24, "Mojito": 19, "Aperol Spritz": 9, "Hugo": 0, "Beer": 0, "Whiskey and Cola": 0 }, // Adjusted to sum to 100
-                            men: { "Prosecco": 0, "White Wine": 18, "Mojito": 24, "Aperol Spritz": 0, "Hugo": 0, "Beer": 29, "Whiskey and Cola": 29 }, // Adjusted to sum to 100
-                            nonDrinkers: { "Non-alcoholic beer": 20, "Prosecco 0%": 10, "Coca Cola": 30, "Soda": 20, "Ginger Ale": 20 }
-                        }
-                    },
-                    phase2: {
-                        name: "Saturday Daytime Grill",
-                        duration: 7,
-                        alcoholicRate: (2 + 6 * 1) / 7, // ~1.14
-                        nonAlcoholicRate: 1,
-                        preferences: {
-                            // Rebalanced percentages after removing Red Wine
-                            women: { "Prosecco": 6, "White Wine": 12, "Mojito": 6, "Aperol Spritz": 6, "Hugo": 6, "Beer": 64, "Whiskey and Cola": 0 }, // Adjusted to sum to 100
-                            men: { "Prosecco": 0, "White Wine": 6, "Mojito": 6, "Aperol Spritz": 0, "Hugo": 0, "Beer": 82, "Whiskey and Cola": 6 }, // Adjusted to sum to 100
-                            nonDrinkers: { "Non-alcoholic beer": 30, "Prosecco 0%": 10, "Coca Cola": 30, "Soda": 15, "Ginger Ale": 15 }
-                        }
-                    },
-                    phase3: {
-                        name: "Saturday Evening Party",
-                        duration: 9,
-                        alcoholicRate: (2 + 8 * 1) / 9, // 1.11
-                        nonAlcoholicRate: 1,
-                        preferences: {
-                           // Rebalanced percentages after removing Red Wine
-                           women: { "Prosecco": 48, "White Wine": 24, "Mojito": 19, "Aperol Spritz": 9, "Hugo": 0, "Beer": 0, "Whiskey and Cola": 0 }, // Adjusted to sum to 100
-                           men: { "Prosecco": 0, "White Wine": 18, "Mojito": 24, "Aperol Spritz": 0, "Hugo": 0, "Beer": 29, "Whiskey and Cola": 29 }, // Adjusted to sum to 100
-                           nonDrinkers: { "Non-alcoholic beer": 20, "Prosecco 0%": 10, "Coca Cola": 30, "Soda": 20, "Ginger Ale": 20 }
-                        }
-                    }
-                },
-                cocktails: {
-                    "Mojito": { "White Rum": 59.15, "Lime Juice": 22.18, "Simple Syrup": 14.79, "Soda": 88.72 },
-                    "Whiskey and Cola": { "Whiskey": 44.36, "Coca Cola": 133.08 },
-                    "Aperol Spritz": { "Prosecco": 90.00, "Aperol": 60.00, "Soda": 30.00 },
-                    "Hugo": { "Prosecco": 88.72, "Elderflower Liqueur": 59.15, "Soda": 29.57 }
-                },
-                bestPractices: [
-                    { title: "Buffering for Unexpected Consumption", content: "Real-world events can be unpredictable. It is strongly recommended to add a safety buffer, typically 10-15% extra, to the final calculated quantities for all beverages. This accounts for heavier-than-anticipated drinking, unexpected guests, or accidental spills, ensuring a smooth event." },
-                    { title: "Efficient Beverage Management", content: "Consider offering signature cocktails to streamline choices and simplify the bar setup. Purchasing beverages in bulk or cases is often more economical. For fine wines and spirits, order well in advance. Ensure sufficient bar staff to maintain quick service." },
-                    { title: "Importance of Quality Ingredients", content: "The quality of ingredients directly impacts the guest experience. Using fresh mixers, high-quality spirits, and appropriate ice (e.g., large, slow-melting cubes) can significantly enhance the overall enjoyment of the drinks served." },
-                    { title: "Ice for More Than Just Drinks", content: "The calculated ice is for drinks only. Remember you'll need additional ice for chilling bottles in buckets or coolers and keeping food items cold, especially during the grill. Plan to buy extra ice beyond the calculated amount." }
-                ]
-            };
+    updateData(data) {
+        this.data = data;
+    }
 
-            const state = window.appState; // Reference the global state object
-            Object.assign(state, JSON.parse(JSON.stringify(initialData))); // Deep copy initial data to global state
+    run() {
+        if (!this.data) return;
+        const targetParticleCount = constrain(ceil(this.data.totalDrinks / 20), 0, 500);
 
-            let charts = {};
-
-            const DOMElements = {
-                totalGuests: document.getElementById('totalGuests'),
-                totalGuestsValue: document.getElementById('totalGuestsValue'),
-                womenPercent: document.getElementById('women_percent'),
-                womenPercentValue: document.getElementById('womenPercentValue'),
-                menPercentValue: document.getElementById('menPercentValue'),
-                womenCount: document.getElementById('womenCount'),
-                menCount: document.getElementById('menCount'),
-                womenDrinkersCount: document.getElementById('womenDrinkersCount'),
-                womenNonDrinkersCount: document.getElementById('womenNonDrinkersCount'),
-                menDrinkersCount: document.getElementById('menDrinkersCount'),
-                menNonDrinkersCount: document.getElementById('menNonDrinkersCount'),
-                servingSizesList: document.getElementById('servingSizesList'),
-                phaseTabs: document.getElementById('phaseTabs'),
-                phaseContent: document.getElementById('phaseContent'),
-                shoppingListBody: document.getElementById('shoppingListBody'),
-                cocktailServingsPhase1: document.getElementById('cocktailServingsPhase1'),
-                cocktailServingsPhase2: document.getElementById('cocktailServingsPhase2'),
-                cocktailServingsPhase3: document.getElementById('cocktailServingsPhase3'),
-                cocktailServingsGrandTotal: document.getElementById('cocktailServingsGrandTotal'),
-                cocktailIngredientsBody: document.getElementById('cocktailIngredientsBody'),
-                totalDrinksResult: document.getElementById('totalDrinksResult'),
-                totalAlcoholicDrinksResult: document.getElementById('totalAlcoholicDrinksResult'),
-                totalNonAlcoholicDrinksResult: document.getElementById('totalNonAlcoholicDrinksResult'),
-                iceRequiredResult: document.getElementById('iceRequiredResult'),
-                accordion: document.getElementById('accordion'),
-                mobileMenuButton: document.getElementById('mobile-menu-button'),
-                mobileMenu: document.getElementById('mobile-menu'),
-            };
-
-            function setupEventListeners() {
-                DOMElements.totalGuests.addEventListener('input', (e) => {
-                    const total = parseInt(e.target.value);
-                    const womenPercent = parseInt(DOMElements.womenPercent.value) / 100;
-                    state.guests.total = total;
-                    state.guests.women = Math.round(total * womenPercent);
-                    state.guests.men = total - state.guests.women;
-                    fullUpdate();
-                });
-                DOMElements.womenPercent.addEventListener('input', (e) => {
-                    const womenPercent = parseInt(e.target.value) / 100;
-                    const total = state.guests.total;
-                    state.guests.women = Math.round(total * womenPercent);
-                    state.guests.men = total - state.guests.women;
-                    fullUpdate();
-                });
-
-                // Fixed typo from DOMEElements to DOMElements
-                DOMElements.phaseTabs.addEventListener('click', (e) => {
-                    if (e.target.tagName === 'BUTTON') {
-                        const phaseId = e.target.dataset.phase;
-                        document.querySelector('.tab-button.active').classList.remove('active');
-                        e.target.classList.add('active');
-                        renderPhaseContent(phaseId);
-                    }
-                });
-
-                DOMElements.accordion.addEventListener('click', (e) => {
-                    const header = e.target.closest('.accordion-header');
-                    if (header) {
-                        const content = header.nextElementSibling;
-                        const icon = header.querySelector('svg');
-                        const isExpanded = content.style.maxHeight && content.style.maxHeight !== '0px';
-                        
-                        document.querySelectorAll('.accordion-content').forEach(c => c.style.maxHeight = null);
-                        document.querySelectorAll('.accordion-header svg').forEach(i => i.style.transform = 'rotate(0deg)');
-                        
-                        if (!isExpanded) {
-                            content.style.maxHeight = content.scrollHeight + "px";
-                            icon.style.transform = 'rotate(180deg)';
-                        }
-                    }
-                });
-                
-                DOMElements.mobileMenuButton.addEventListener('click', () => {
-                   DOMElements.mobileMenu.classList.toggle('hidden');
-                });
-
-                document.querySelectorAll('.mobile-nav-link').forEach(link => {
-                    link.addEventListener('click', () => {
-                        DOMElements.mobileMenu.classList.add('hidden');
-                    });
-                });
+        if (this.particles.length < targetParticleCount && frameCount % 3 === 0) {
+            let type = 'nonAlcoholic';
+            if (this.data.totalDrinks > 0) {
+                type = random(1) < (this.data.alcoholicDrinks / this.data.totalDrinks) ? 'alcoholic' : 'nonAlcoholic';
             }
-            
-            function setupPhaseContentEventListeners() {
-                document.querySelectorAll('#phaseContent .slider').forEach(slider => {
-                    slider.addEventListener('input', e => {
-                        const { phase, group, beverage } = e.target.dataset;
-                        const changedValue = parseInt(e.target.value);
-                        
-                        const preferences = state.phases[phase].preferences[group];
-                        const otherBeverages = Object.keys(preferences).filter(b => b !== beverage);
-                        const sumOfOthersBefore = otherBeverages.reduce((sum, b) => sum + preferences[b], 0);
+            this.particles.push(new Particle(this.colors[type]));
+        }
 
-                        preferences[beverage] = changedValue;
-                        
-                        const remainingPercentage = 100 - changedValue;
+        if (this.particles.length > targetParticleCount) this.particles.splice(0, 1);
 
-                        if (sumOfOthersBefore > 0) {
-                            const ratio = remainingPercentage / sumOfOthersBefore;
-                            otherBeverages.forEach(b => {
-                                preferences[b] = Math.round(preferences[b] * ratio);
-                            });
-                        } else if (otherBeverages.length > 0) {
-                            const equalShare = Math.floor(remainingPercentage / otherBeverages.length);
-                            otherBeverages.forEach(b => preferences[b] = equalShare);
-                        }
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            let p = this.particles[i];
+            p.update();
+            p.display();
+            if (p.isFinished()) this.particles.splice(i, 1);
+        }
+    }
+}
 
-                        let currentSum = Object.values(preferences).reduce((sum, val) => sum + val, 0);
-                        let difference = 100 - currentSum;
-                        if (difference !== 0) {
-                           const keyToAdjust = otherBeverages.length > 0 ? otherBeverages[0] : beverage;
-                           preferences[keyToAdjust] += difference;
-                           if(preferences[keyToAdjust] < 0) preferences[keyToAdjust] = 0;
-                        }
+class Particle {
+    constructor(c) {
+        this.w = min(1200, width - 40);
+        this.h = height - contentStartY - 150 - 80;
+        this.x = random(this.w);
+        this.y = random(this.h);
+        this.vx = random(-0.5, 0.5);
+        this.vy = random(-0.5, 0.5);
+        this.alpha = random(150, 255);
+        this.size = random(4, 10);
+        this.color = c;
+    }
 
-                        Object.keys(preferences).forEach(b => {
-                            const sliderElement = document.querySelector(`input[data-phase="${phase}"][data-group="${group}"][data-beverage="${b}"]`);
-                            if (sliderElement) {
-                                sliderElement.value = preferences[b];
-                                document.getElementById(`val-${phase}-${group}-${b}`).textContent = preferences[b];
-                            }
-                        });
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.alpha -= 0.8;
+        if (this.x < 0 || this.x > this.w) this.vx *= -1;
+        if (this.y < 0 || this.y > this.h) this.vy *= -1;
+    }
 
-                        updateChart(phase, group);
-                        calculateAndRenderResults();
-                    });
-                });
-            }
+    display() {
+        noStroke();
+        fill(red(this.color), green(this.color), blue(this.color), this.alpha);
+        ellipse(this.x, this.y, this.size);
+    }
 
-            function updateChart(phaseId, group) {
-                const chart = charts[`${phaseId}-${group}`];
-                if (chart) {
+    isFinished() {
+        return this.alpha < 0;
+    }
+}
+
+
+// --- CORE LOGIC & DATA INITIALIZATION ---
+
+function buildUI() {
+    const w = min(1200, width - 40);
+
+    const breakpoint = 1100;
+    let navConfig = { labels: {}, buttonWidth: 150, buttonGap: 10 };
+
+    if (w < breakpoint) {
+        navConfig.labels = { setup: "Setup", plan: "Plan", results: "List", visualizer: "Visuals", formulas: "Formulas", insights: "Info" };
+        navConfig.buttonWidth = (w - 200) / 6 - navConfig.buttonGap;
+    } else {
+        navConfig.labels = { setup: "Event Setup", plan: "Consumption Plan", results: "Shopping List", visualizer: "Visualizer", formulas: "Formulas", insights: "Best Practices" };
+        navConfig.buttonWidth = 150;
+    }
+
+    const navKeys = ['setup', 'plan', 'results', 'visualizer', 'formulas', 'insights'];
+    const totalNavWidth = (navConfig.buttonWidth * navKeys.length) + (navConfig.buttonGap * (navKeys.length - 1));
+    let startX = w - totalNavWidth - 10; // 10px padding right
+
+    ui.navButtons = {};
+    navKeys.forEach((key, index) => {
+        const buttonX = startX + index * (navConfig.buttonWidth + navConfig.buttonGap);
+        ui.navButtons[key] = new Button(buttonX, 10, navConfig.buttonWidth, 40, navConfig.labels[key]);
+    });
+    if (ui.navButtons[currentScreen]) ui.navButtons[currentScreen].active = true;
+
+    ui.setup = { guestSliders: {} };
+    ui.setup.guestSliders.totalGuests = new Slider(0, 0, 0, 40, `Total Guests: ${state.guests.total}`, 1, 300, state.guests.total, (val) => {
+        ui.setup.guestSliders.totalGuests.label = `Total Guests: ${round(val)}`;
+    });
+    ui.setup.guestSliders.womenPercent = new Slider(0, 0, 0, 40, 'Gender Split:', 0, 100, 50, (val) => {
+        ui.setup.guestSliders.womenPercent.label = `Gender Split: ${round(val)}% W / ${100-round(val)}% M`;
+    });
+
+    const planCardY = contentStartY + 150;
+    ui.plan = { phaseTabs: {}, sliders: {}, charts: {} };
+    ui.plan.phaseTabs.phase1 = new Button(20, planCardY, 150, 40, "Friday Reception", true);
+    ui.plan.phaseTabs.phase2 = new Button(180, planCardY, 150, 40, "Saturday Grill");
+    ui.plan.phaseTabs.phase3 = new Button(340, planCardY, 150, 40, "Saturday Party");
+
+    const chartColors = {
+        women: ['#d88c75', '#e4a391', '#eecab9', '#f8dcd0'],
+        men: ['#4c9b8e', '#6bb3a5', '#89ccbd', '#a8e5d5'],
+        nonDrinkers: ['#a8a29e', '#bbb6b2', '#cec9c6', '#e0ddda']
+    };
+    Object.keys(state.phases).forEach(phaseId => {
+        ui.plan.sliders[phaseId] = { women: [], men: [], nonDrinkers: [] };
+        ui.plan.charts[phaseId] = {};
+        Object.keys(state.phases[phaseId].preferences).forEach(group => {
+            Object.entries(state.phases[phaseId].preferences[group]).forEach(([bev, val]) => {
+                const slider = new Slider(0, 0, 0, 20, `${bev}: ${val}%`, 0, 100, val, (newVal) => {
                     const preferences = state.phases[phaseId].preferences[group];
-                    chart.data.labels = Object.keys(preferences);
-                    chart.data.datasets[0].data = Object.values(preferences);
-                    chart.update('none'); 
-                }
-            }
-            
-            function renderServingSizes() {
-                DOMElements.servingSizesList.innerHTML = Object.entries(state.servings).map(([name, data]) => `
-                    <li class="flex justify-between items-center">
-                        <span>${name}</span>
-                        <span class="font-bold text-stone-700">${data.serves.toFixed(2)}</span>
-                    </li>
-                `).join('');
-            }
-            
-            function renderBestPractices() {
-                DOMElements.accordion.innerHTML = state.bestPractices.map((item) => `
-                    <div class="card">
-                        <div class="accordion-header flex justify-between items-center p-4 cursor-pointer">
-                            <h4 class="font-bold text-stone-700">${item.title}</h4>
-                            <svg class="w-5 h-5 text-stone-500 transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-                        </div>
-                        <div class="accordion-content">
-                            <div class="p-4 pt-0 text-stone-600 text-sm">
-                                <p>${item.content}</p>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
-            }
-
-            function renderPhaseContent(phaseId) {
-                const phase = state.phases[phaseId];
-                const chartColors = {
-                    women: ['#d88c75', '#e4a391', '#eecab9', '#f8dcd0', '#ffe6da', '#fff0e8', '#fff8f4'],
-                    men: ['#4c9b8e', '#6bb3a5', '#89ccbd', '#a8e5d5', '#c6ffed', '#e3fff6', '#f0fffa'],
-                    nonDrinkers: ['#a8a29e', '#bbb6b2', '#cec9c6', '#e0ddda', '#f2f0ee']
-                };
-                const createSectionHTML = (group, title) => {
-                    const preferences = phase.preferences[group];
-                    return `
-                        <div class="p-4 rounded-lg border border-stone-100">
-                            <h4 class="font-bold text-xl mb-4 text-center text-stone-700">${title}</h4>
-                            <div class="chart-container mb-6">
-                                <canvas id="chart-${phaseId}-${group}"></canvas>
-                            </div>
-                            <div class="space-y-3">
-                                ${Object.keys(preferences).map(beverage => `
-                                    <div>
-                                        <label class="text-sm font-medium flex justify-between">
-                                            <span>${beverage}</span>
-                                            <span><span id="val-${phaseId}-${group}-${beverage}">${preferences[beverage]}</span>%</span>
-                                        </label>
-                                        <input type="range" min="0" max="100" value="${preferences[beverage]}" 
-                                            class="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer slider"
-                                            data-phase="${phaseId}" data-group="${group}" data-beverage="${beverage}">
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `;
-                };
-
-                DOMElements.phaseContent.innerHTML = createSectionHTML('women', 'Women\'s Preferences') + createSectionHTML('men', 'Men\'s Preferences') + createSectionHTML('nonDrinkers', 'Non-Drinker Preferences');
-
-                Object.keys(phase.preferences).forEach(group => {
-                    const ctx = document.getElementById(`chart-${phaseId}-${group}`);
-                    if (ctx) {
-                        const preferences = phase.preferences[group];
-                        charts[`${phaseId}-${group}`] = new Chart(ctx, {
-                            type: 'doughnut',
-                            data: {
-                                labels: Object.keys(preferences),
-                                datasets: [{
-                                    data: Object.values(preferences),
-                                    backgroundColor: chartColors[group],
-                                    borderColor: '#FFFFFF',
-                                    borderWidth: 2,
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                cutout: '60%',
-                                plugins: {
-                                    legend: { display: false },
-                                    tooltip: { callbacks: { label: (c) => `${c.label}: ${c.raw}%` } }
-                                }
-                            }
-                        });
+                    const otherBeverages = Object.keys(preferences).filter(b => b !== bev);
+                    const sumOfOthersBefore = otherBeverages.reduce((sum, b) => sum + preferences[b], 0);
+                    preferences[bev] = round(newVal);
+                    const remainingPercentage = 100 - preferences[bev];
+                    if (sumOfOthersBefore > 0) {
+                        const ratio = remainingPercentage / sumOfOthersBefore;
+                        otherBeverages.forEach(b => { preferences[b] = round(preferences[b] * ratio); });
+                    } else if (otherBeverages.length > 0) {
+                        const equalShare = floor(remainingPercentage / otherBeverages.length);
+                        otherBeverages.forEach(b => preferences[b] = equalShare);
                     }
-                });
-                setupPhaseContentEventListeners();
-            }
-
-            function updateGuestProfileUI() {
-                const { total, women, men, women_drinkers, men_drinkers } = state.guests;
-                const women_non_drinkers = women - women_drinkers;
-                const men_non_drinkers = men - men_drinkers;
-                
-                DOMElements.totalGuestsValue.textContent = total;
-                DOMElements.totalGuests.value = total;
-
-                DOMElements.womenPercentValue.textContent = `${Math.round((women / total) * 100)}%`;
-                DOMElements.menPercentValue.textContent = `${Math.round((men / total) * 100)}%`;
-                DOMElements.womenPercent.value = Math.round((women / total) * 100);
-
-                DOMElements.womenCount.textContent = women;
-                DOMElements.menCount.textContent = men;
-                DOMElements.womenDrinkersCount.textContent = women_drinkers;
-                DOMElements.womenNonDrinkersCount.textContent = women_non_drinkers >= 0 ? women_non_drinkers : 0;
-                DOMElements.menDrinkersCount.textContent = men_drinkers;
-                DOMElements.menNonDrinkersCount.textContent = men_non_drinkers >= 0 ? men_non_drinkers : 0;
-            }
-
-            function getGuestCounts() {
-                const { women, men, women_drinkers, men_drinkers } = state.guests;
-                const women_non_drinkers = Math.max(0, women - women_drinkers);
-                const men_non_drinkers = Math.max(0, men - men_drinkers);
-                return {
-                    womenDrinkers: women_drinkers,
-                    menDrinkers: men_drinkers,
-                    totalDrinkers: women_drinkers + men_drinkers,
-                    totalNonDrinkers: women_non_drinkers + men_non_drinkers,
-                };
-            }
-
-            function isIngredientOfAnyCocktail(ingredientName) {
-                for (const cocktailKey in state.cocktails) {
-                    if (state.cocktails[cocktailKey].hasOwnProperty(ingredientName)) {
-                        return true;
+                    let currentSum = Object.values(preferences).reduce((sum, v) => sum + v, 0);
+                    let difference = 100 - currentSum;
+                    if (difference !== 0) {
+                       const keyToAdjust = otherBeverages.length > 0 ? otherBeverages[0] : bev;
+                       preferences[keyToAdjust] += difference;
+                       if(preferences[keyToAdjust] < 0) preferences[keyToAdjust] = 0;
                     }
-                }
-                return false;
-            }
-
-            function calculateAndRenderResults() {
-                const guestCounts = getGuestCounts();
-                let allBeverageServingsAccumulator = {}; // Stores calculated servings of each beverage (including cocktail names)
-                let totalCocktailServingsByPhase = { phase1: 0, phase2: 0, phase3: 0 };
-                
-                const cocktailNames = Object.keys(state.cocktails);
-
-                let grandTotalAlcoholicDrinksConsumed = 0;
-                let grandTotalNonAlcoholicDrinksConsumed = 0;
-
-                Object.keys(state.phases).forEach(phaseId => {
-                    const phase = state.phases[phaseId];
-                    const alcoholicDrinksInPhase = guestCounts.totalDrinkers * phase.alcoholicRate * phase.duration;
-                    const womenDrinks = alcoholicDrinksInPhase * (guestCounts.womenDrinkers / guestCounts.totalDrinkers || 0);
-                    const menDrinks = alcoholicDrinksInPhase * (guestCounts.menDrinkers / guestCounts.totalDrinkers || 0);
-
-                    grandTotalAlcoholicDrinksConsumed += alcoholicDrinksInPhase;
-
-                    // 1. Process Alcoholic Drink Preferences into accumulator
-                    Object.entries(phase.preferences.women).forEach(([beverage, percent]) => {
-                        const servings = womenDrinks * (percent / 100);
-                        allBeverageServingsAccumulator[beverage] = (allBeverageServingsAccumulator[beverage] || 0) + servings;
-                        if (cocktailNames.includes(beverage)) {
-                            totalCocktailServingsByPhase[phaseId] += servings;
-                        }
+                    ui.plan.sliders[phaseId][group].forEach(s => {
+                        const currentBev = s.label.split(':')[0];
+                        s.value = preferences[currentBev];
+                        s.label = `${currentBev}: ${preferences[currentBev]}%`;
                     });
-                    Object.entries(phase.preferences.men).forEach(([beverage, percent]) => {
-                        const servings = menDrinks * (percent / 100);
-                        allBeverageServingsAccumulator[beverage] = (allBeverageServingsAccumulator[beverage] || 0) + servings;
-                        if (cocktailNames.includes(beverage)) {
-                            totalCocktailServingsByPhase[phaseId] += servings;
-                        }
+                    ui.plan.charts[phaseId][group].updateData({
+                        labels: Object.keys(preferences),
+                        values: Object.values(preferences),
+                        colors: chartColors[group]
                     });
-
-                    // 2. Process Non-Alcoholic Drinks (base for non-drinkers + mixers for drinkers)
-                    const baseNonAlcoholicServingsInPhase = guestCounts.totalNonDrinkers * phase.nonAlcoholicRate * phase.duration +
-                                                             guestCounts.totalDrinkers * phase.nonAlcoholicRate * phase.duration * 0.2; // 20% for mixers/hydration
-
-                    // 3. ADDITIONAL 300ml/hour soft drink volume for Non-Drinkers
-                    const additionalSoftDrinkVolumeMl = guestCounts.totalNonDrinkers * phase.duration * 300;
-                    const softDrinkCategories = ["Coca Cola", "Soda", "Ginger Ale"];
-                    let totalSoftDrinkPreferencePercentage = softDrinkCategories.reduce((sum, sd) => sum + (phase.preferences.nonDrinkers[sd] || 0), 0);
-
-                    let additionalSoftDrinkServings = 0;
-                    if (totalSoftDrinkPreferencePercentage > 0) {
-                        softDrinkCategories.forEach(beverage => {
-                            if (state.servings[beverage]) {
-                                const relativePercent = (phase.preferences.nonDrinkers[beverage] || 0) / totalSoftDrinkPreferencePercentage;
-                                const volumeForThisSoftDrink = additionalSoftDrinkVolumeMl * relativePercent;
-                                const originalMlPerServing = state.servings[beverage].size / state.servings[beverage].serves;
-                                const servingsToAdd = originalMlPerServing > 0 ? volumeForThisSoftDrink / originalMlPerServing : 0;
-                                allBeverageServingsAccumulator[beverage] = (allBeverageServingsAccumulator[beverage] || 0) + servingsToAdd;
-                                additionalSoftDrinkServings += servingsToAdd;
-                            }
-                        });
-                    }
-                    grandTotalNonAlcoholicDrinksConsumed += baseNonAlcoholicServingsInPhase + additionalSoftDrinkServings;
-
-                    // Distribute base non-alcoholic servings into accumulator
-                    Object.entries(phase.preferences.nonDrinkers).forEach(([beverage, percent]) => {
-                         const servings = baseNonAlcoholicServingsInPhase * (percent / 100);
-                         allBeverageServingsAccumulator[beverage] = (allBeverageServingsAccumulator[beverage] || 0) + servings;
-                    });
+                    calculateAndRenderResults();
                 });
+                ui.plan.sliders[phaseId][group].push(slider);
+            });
+            const prefs = state.phases[phaseId].preferences[group];
+            ui.plan.charts[phaseId][group] = new DoughnutChart(0, 0, 60, {
+                labels: Object.keys(prefs),
+                values: Object.values(prefs),
+                colors: chartColors[group]
+            });
+        });
+    });
 
-                // Calculate grand total cocktail servings
-                const grandTotalCocktailServings = Object.values(totalCocktailServingsByPhase).reduce((sum, servings) => sum + servings, 0);
+    ui.results = {
+        statDisplays: { total: { label: "Total Drinks", value: "0" }, alcoholic: { label: "Alcoholic Servings", value: "0" }, nonAlc: { label: "Non-Alc Servings", value: "0" }, ice: { label: "Ice Required", value: "0 kg" } },
+        shoppingList: [],
+        cocktailServings: { phase1: 0, phase2: 0, phase3: 0, grandTotal: 0 },
+        cocktailIngredients: []
+    };
 
-                let finalIngredientVolumesMl = {}; // Total ml of each fundamental ingredient
+    ui.visualizer = { system: new ParticleSystem() };
+    
+    // --- NEW: FORMULAS SCREEN UI ---
+    ui.formulas = { accordions: [] };
+    state.formulas.forEach(item => {
+        ui.formulas.accordions.push(new AccordionItem(0, 0, w, item.title, item.content));
+    });
 
-                Object.entries(allBeverageServingsAccumulator).forEach(([beverage, servings]) => {
-                    if (state.cocktails[beverage]) { // It's a cocktail (e.g., Mojito)
-                        Object.entries(state.cocktails[beverage]).forEach(([ingredient, volumePerCocktailServing]) => {
-                            finalIngredientVolumesMl[ingredient] = (finalIngredientVolumesMl[ingredient] || 0) + (volumePerCocktailServing * servings);
-                        });
-                    } else if (state.servings[beverage]) { // It's a direct drink (e.g., Beer, Coca Cola)
-                        const volumePerServing = state.servings[beverage].size / state.servings[beverage].serves;
-                        finalIngredientVolumesMl[beverage] = (finalIngredientVolumesMl[beverage] || 0) + (volumePerServing * servings);
-                    }
-                });
+    ui.insights = { accordions: [] };
+    state.bestPractices.forEach(item => {
+        ui.insights.accordions.push(new AccordionItem(0, 0, w, item.title, [{text: item.content, type: 'normal'}]));
+    });
+}
 
-                let overallShoppingList = [];
-                let cocktailIngredientsOnlyList = [];
+function updateGuestProfile() {
+    const total = round(ui.setup.guestSliders.totalGuests.value);
+    const womenPercent = round(ui.setup.guestSliders.womenPercent.value) / 100;
+    state.guests.total = total;
+    state.guests.women = round(total * womenPercent);
+    state.guests.men = total - state.guests.women;
+}
 
-                Object.entries(finalIngredientVolumesMl).forEach(([ingredient, totalVolumeMl]) => {
-                    // Only consider items that exist in our servings list for shopping
-                    if (state.servings[ingredient]) { 
-                        const unitsToBuy = Math.ceil(totalVolumeMl / state.servings[ingredient].size);
-                        if (unitsToBuy > 0) {
-                            overallShoppingList.push({ name: ingredient, units: unitsToBuy });
-                            if (isIngredientOfAnyCocktail(ingredient)) {
-                                cocktailIngredientsOnlyList.push({ name: ingredient, units: unitsToBuy });
-                            }
-                        }
-                    }
-                });
-                
-                // Sort lists
-                overallShoppingList.sort((a, b) => b.units - a.units);
-                cocktailIngredientsOnlyList.sort((a, b) => b.units - a.units);
+function calculateAndRenderResults() {
+    const guestCounts = {
+        womenDrinkers: state.guests.women_drinkers,
+        menDrinkers: state.guests.men_drinkers,
+        totalDrinkers: state.guests.women_drinkers + state.guests.men_drinkers,
+        totalNonDrinkers: Math.max(0, state.guests.women - state.guests.women_drinkers) + Math.max(0, state.guests.men - state.guests.men_drinkers),
+    };
+    
+    let allBeverageServingsAccumulator = {};
+    let totalCocktailServingsByPhase = { phase1: 0, phase2: 0, phase3: 0 };
+    const cocktailNames = Object.keys(state.cocktails);
 
-                DOMElements.shoppingListBody.innerHTML = overallShoppingList.map(item => `
-                    <tr class="border-b border-stone-100 hover:bg-stone-50">
-                        <td class="py-3 px-4 font-medium">${item.name}</td>
-                        <td class="py-3 px-4 text-right font-bold text-stone-800">${item.units}</td>
-                    </tr>
-                `).join('');
+    let grandTotalAlcoholicDrinksConsumed = 0;
+    let grandTotalNonAlcoholicDrinksConsumed = 0;
 
-                DOMElements.cocktailServingsPhase1.textContent = Math.ceil(totalCocktailServingsByPhase.phase1);
-                DOMElements.cocktailServingsPhase2.textContent = Math.ceil(totalCocktailServingsByPhase.phase2);
-                DOMElements.cocktailServingsPhase3.textContent = Math.ceil(totalCocktailServingsByPhase.phase3);
-                DOMElements.cocktailServingsGrandTotal.textContent = Math.ceil(grandTotalCocktailServings);
+    Object.keys(state.phases).forEach(phaseId => {
+        const phase = state.phases[phaseId];
+        const alcoholicDrinksInPhase = guestCounts.totalDrinkers * phase.alcoholicRate * phase.duration;
+        const womenDrinks = alcoholicDrinksInPhase * (guestCounts.womenDrinkers / guestCounts.totalDrinkers || 0);
+        const menDrinks = alcoholicDrinksInPhase * (guestCounts.menDrinkers / guestCounts.totalDrinkers || 0);
+        grandTotalAlcoholicDrinksConsumed += alcoholicDrinksInPhase;
 
-                DOMElements.cocktailIngredientsBody.innerHTML = cocktailIngredientsOnlyList.map(item => `
-                    <tr class="border-b border-stone-100 hover:bg-stone-50">
-                        <td class="py-2 px-3 font-medium">${item.name}</td>
-                        <td class="py-2 px-3 text-right font-bold text-stone-800">${item.units}</td>
-                    </tr>
-                `).join('');
-                
-                DOMElements.totalDrinksResult.textContent = Math.ceil(grandTotalAlcoholicDrinksConsumed + grandTotalNonAlcoholicDrinksConsumed);
-                DOMElements.totalAlcoholicDrinksResult.textContent = Math.ceil(grandTotalAlcoholicDrinksConsumed);
-                DOMElements.totalNonAlcoholicDrinksResult.textContent = Math.ceil(grandTotalNonAlcoholicDrinksConsumed);
-                DOMElements.iceRequiredResult.textContent = Math.ceil((grandTotalAlcoholicDrinksConsumed + grandTotalNonAlcoholicDrinksConsumed) / 12 * 3);
-
-                // Update p5.js visualizer state
-                window.appState.visualizerData = {
-                    totalDrinks: Math.ceil(grandTotalAlcoholicDrinksConsumed + grandTotalNonAlcoholicDrinksConsumed),
-                    alcoholicDrinks: Math.ceil(grandTotalAlcoholicDrinksConsumed),
-                    nonAlcoholicDrinks: Math.ceil(grandTotalNonAlcoholicDrinksConsumed)
-                };
-            }
-
-            function fullUpdate() {
-                updateGuestProfileUI();
-                calculateAndRenderResults();
-            }
-
-            function init() {
-                setupEventListeners();
-                renderServingSizes();
-                renderBestPractices();
-                renderPhaseContent('phase1');
-                fullUpdate();
-            }
-
-            init();
+        Object.entries(phase.preferences.women).forEach(([beverage, percent]) => {
+            const servings = womenDrinks * (percent / 100);
+            allBeverageServingsAccumulator[beverage] = (allBeverageServingsAccumulator[beverage] || 0) + servings;
+            if (cocktailNames.includes(beverage)) totalCocktailServingsByPhase[phaseId] += servings;
+        });
+        Object.entries(phase.preferences.men).forEach(([beverage, percent]) => {
+            const servings = menDrinks * (percent / 100);
+            allBeverageServingsAccumulator[beverage] = (allBeverageServingsAccumulator[beverage] || 0) + servings;
+            if (cocktailNames.includes(beverage)) totalCocktailServingsByPhase[phaseId] += servings;
         });
 
-        // p5.js sketch
-        const s = (sketch) => {
-            let particles = [];
-            let containerDiv;
-            const ALCOHOL_COLOR = sketch.color(216, 140, 117, 180); // #d88c75 with alpha
-            const NON_ALCOHOL_COLOR = sketch.color(76, 155, 142, 180); // #4c9b8e with alpha
-
-            sketch.setup = () => {
-                containerDiv = document.getElementById('p5-canvas-container');
-                const canvas = sketch.createCanvas(containerDiv.offsetWidth, containerDiv.offsetHeight);
-                canvas.parent('p5-canvas-container');
-                sketch.pixelDensity(1); // Ensure consistent rendering across devices
-                sketch.noStroke();
-                sketch.frameRate(30);
-
-                // Initial particle generation
-                sketch.generateParticles();
-            };
-
-            sketch.windowResized = () => {
-                containerDiv = document.getElementById('p5-canvas-container');
-                sketch.resizeCanvas(containerDiv.offsetWidth, containerDiv.offsetHeight);
-                sketch.generateParticles(); // Regenerate particles on resize for better distribution
-            };
-
-            sketch.generateParticles = () => {
-                particles = [];
-                const maxParticles = 500; // Cap particle count for performance
-                // Access window.appState directly as it's globally available
-                let totalDrinks = window.appState.visualizerData.totalDrinks;
-                let alcoholicDrinks = window.appState.visualizerData.alcoholicDrinks;
-                let nonAlcoholicDrinks = window.appState.visualizerData.nonAlcoholicDrinks;
-
-                let numParticles = Math.min(maxParticles, Math.ceil(totalDrinks / 50)); // Scale drinks to particles, max 500
-                if (numParticles < 50 && totalDrinks > 0) numParticles = 50; // Minimum particles if there are drinks
-                if (totalDrinks === 0) numParticles = 0;
-
-
-                for (let i = 0; i < numParticles; i++) {
-                    let type = 'nonAlcoholic';
-                    if (totalDrinks > 0) { // Only calculate ratio if totalDrinks is not zero
-                         type = sketch.random(1) < (alcoholicDrinks / totalDrinks) ? 'alcoholic' : 'nonAlcoholic';
-                    }
-                    particles.push(new Particle(sketch, type, sketch.width, sketch.height));
+        const baseNonAlcoholicServingsInPhase = guestCounts.totalNonDrinkers * phase.nonAlcoholicRate * phase.duration + guestCounts.totalDrinkers * phase.nonAlcoholicRate * phase.duration * 0.2;
+        const additionalSoftDrinkVolumeMl = guestCounts.totalNonDrinkers * phase.duration * 300;
+        const softDrinkCategories = ["Coca Cola", "Soda", "Ginger Ale"];
+        let totalSoftDrinkPreferencePercentage = softDrinkCategories.reduce((sum, sd) => sum + (phase.preferences.nonDrinkers[sd] || 0), 0);
+        let additionalSoftDrinkServings = 0;
+        if (totalSoftDrinkPreferencePercentage > 0) {
+            softDrinkCategories.forEach(beverage => {
+                if (state.servings[beverage]) {
+                    const relativePercent = (phase.preferences.nonDrinkers[beverage] || 0) / totalSoftDrinkPreferencePercentage;
+                    const volumeForThisSoftDrink = additionalSoftDrinkVolumeMl * relativePercent;
+                    const originalMlPerServing = state.servings[beverage].size / state.servings[beverage].serves;
+                    const servingsToAdd = originalMlPerServing > 0 ? volumeForThisSoftDrink / originalMlPerServing : 0;
+                    allBeverageServingsAccumulator[beverage] = (allBeverageServingsAccumulator[beverage] || 0) + servingsToAdd;
+                    additionalSoftDrinkServings += servingsToAdd;
                 }
-            };
+            });
+        }
+        grandTotalNonAlcoholicDrinksConsumed += baseNonAlcoholicServingsInPhase + additionalSoftDrinkServings;
 
-            sketch.draw = () => {
-                sketch.background(255, 255, 255, 0); // Transparent background to show card background
+        Object.entries(phase.preferences.nonDrinkers).forEach(([beverage, percent]) => {
+             const servings = baseNonAlcoholicServingsInPhase * (percent / 100);
+             allBeverageServingsAccumulator[beverage] = (allBeverageServingsAccumulator[beverage] || 0) + servings;
+        });
+    });
 
-                // Re-generate particles only if data changes significantly
-                if (window.appState.visualizerData && (sketch.frameCount % 60 === 0 || particles.length === 0)) { // Check every 2 seconds or if empty
-                    const currentTotal = window.appState.visualizerData.totalDrinks;
-                    const currentAlcoholic = window.appState.visualizerData.alcoholicDrinks;
-                    const currentNonAlcoholic = window.appState.visualizerData.nonAlcoholicDrinks;
+    const grandTotalCocktailServings = Object.values(totalCocktailServingsByPhase).reduce((sum, servings) => sum + servings, 0);
+    let finalIngredientVolumesMl = {};
+    Object.entries(allBeverageServingsAccumulator).forEach(([beverage, servings]) => {
+        if (state.cocktails[beverage]) {
+            Object.entries(state.cocktails[beverage]).forEach(([ingredient, volumePerCocktailServing]) => {
+                finalIngredientVolumesMl[ingredient] = (finalIngredientVolumesMl[ingredient] || 0) + (volumePerCocktailServing * servings);
+            });
+        } else if (state.servings[beverage]) {
+            const volumePerServing = state.servings[beverage].size / state.servings[beverage].serves;
+            finalIngredientVolumesMl[beverage] = (finalIngredientVolumesMl[beverage] || 0) + (volumePerServing * servings);
+        }
+    });
+    
+    function isIngredientOfAnyCocktail(ingredientName) {
+        for (const cocktailKey in state.cocktails) {
+            if (state.cocktails[cocktailKey].hasOwnProperty(ingredientName)) return true;
+        }
+        return false;
+    }
 
-                    const particleCountTarget = Math.min(500, Math.ceil(currentTotal / 50));
-                    if (Math.abs(particles.length - particleCountTarget) > 10 || (currentTotal > 0 && sketch.abs(sketch.random(1) - (currentAlcoholic / currentTotal)) > 0.1) || (currentTotal === 0 && particles.length > 0)) {
-                         sketch.generateParticles();
-                    }
-                }
-
-                for (let i = particles.length - 1; i >= 0; i--) {
-                    let p = particles[i];
-                    p.update();
-                    p.display();
-                    if (p.isFinished()) {
-                        particles.splice(i, 1);
-                    }
-                }
-                // Continuously add new particles up to the target number
-                while (particles.length < (window.appState.visualizerData ? Math.min(500, Math.ceil(window.appState.visualizerData.totalDrinks / 50)) : 0) && sketch.frameCount % 5 === 0) {
-                    let totalDrinks = window.appState.visualizerData.totalDrinks;
-                    let alcoholicDrinks = window.appState.visualizerData.alcoholicDrinks;
-                    let nonAlcoholicDrinks = window.appState.visualizerData.nonAlcoholicDrinks;
-                    let type = 'nonAlcoholic';
-                    if (totalDrinks > 0) { // Only calculate ratio if totalDrinks is not zero
-                        type = sketch.random(1) < (alcoholicDrinks / totalDrinks) ? 'alcoholic' : 'nonAlcoholic';
-                    }
-                    particles.push(new Particle(sketch, type, sketch.width, sketch.height));
-                }
-            };
-
-            class Particle {
-                constructor(sketch, type, canvasWidth, canvasHeight) {
-                    this.sketch = sketch;
-                    this.x = sketch.random(canvasWidth);
-                    this.y = sketch.random(canvasHeight);
-                    this.vx = sketch.random(-0.5, 0.5);
-                    this.vy = sketch.random(-0.5, 0.5);
-                    this.alpha = sketch.random(150, 255);
-                    this.size = sketch.random(4, 10);
-                    this.lifespan = sketch.random(100, 300);
-                    this.type = type;
-                    this.color = type === 'alcoholic' ? ALCOHOL_COLOR : NON_ALCOHOL_COLOR;
-                }
-
-                update() {
-                    this.x += this.vx;
-                    this.y += this.vy;
-                    this.alpha -= 1;
-                    this.lifespan--;
-                }
-
-                display() {
-                    this.sketch.fill(this.color.levels[0], this.color.levels[1], this.color.levels[2], this.alpha);
-                    this.sketch.ellipse(this.x, this.y, this.size);
-                }
-
-                isFinished() {
-                    return this.alpha < 0 || this.lifespan < 0;
+    let overallShoppingList = [];
+    let cocktailIngredientsOnlyList = [];
+    Object.entries(finalIngredientVolumesMl).forEach(([ingredient, totalVolumeMl]) => {
+        if (state.servings[ingredient]) { 
+            const unitsToBuy = ceil(totalVolumeMl / state.servings[ingredient].size);
+            if (unitsToBuy > 0) {
+                overallShoppingList.push({ name: ingredient, units: unitsToBuy });
+                if (isIngredientOfAnyCocktail(ingredient)) {
+                    cocktailIngredientsOnlyList.push({ name: ingredient, units: unitsToBuy });
                 }
             }
-        };
+        }
+    });
 
-        new p5(s, 'p5-canvas-container'); // Initialize p5 sketch
-    </script>
-</body>
-</html>
+    ui.results.statDisplays.total.value = ceil(grandTotalAlcoholicDrinksConsumed + grandTotalNonAlcoholicDrinksConsumed);
+    ui.results.statDisplays.alcoholic.value = ceil(grandTotalAlcoholicDrinksConsumed);
+    ui.results.statDisplays.nonAlc.value = ceil(grandTotalNonAlcoholicDrinksConsumed);
+    ui.results.statDisplays.ice.value = `${ceil((grandTotalAlcoholicDrinksConsumed + grandTotalNonAlcoholicDrinksConsumed) * 0.25)} kg`;
+    ui.results.shoppingList = overallShoppingList.sort((a, b) => b.units - a.units);
+    ui.results.cocktailIngredients = cocktailIngredientsOnlyList.sort((a, b) => b.units - a.units);
+    ui.results.cocktailServings.phase1 = ceil(totalCocktailServingsByPhase.phase1);
+    ui.results.cocktailServings.phase2 = ceil(totalCocktailServingsByPhase.phase2);
+    ui.results.cocktailServings.phase3 = ceil(totalCocktailServingsByPhase.phase3);
+    ui.results.cocktailServings.grandTotal = ceil(grandTotalCocktailServings);
+    ui.visualizer.system.updateData({
+        totalDrinks: ceil(grandTotalAlcoholicDrinksConsumed + grandTotalNonAlcoholicDrinksConsumed),
+        alcoholicDrinks: ceil(grandTotalAlcoholicDrinksConsumed),
+        nonAlcoholicDrinks: ceil(grandTotalNonAlcoholicDrinksConsumed)
+    });
+}
+
+function initializeStateData() {
+    state = {
+        guests: { total: 28, women: 14, men: 14, women_drinkers: 10, men_drinkers: 11, },
+        servings: { "Prosecco": { size: 750, serves: 5 }, "White Wine": { size: 750, serves: 5 }, "Whiskey": { size: 750, serves: 17 }, "Beer": { size: 500, serves: 1 }, "Aperol": { size: 1000, serves: 17 }, "Coca Cola": { size: 2000, serves: 12 }, "Ginger Ale": { size: 2000, serves: 12 }, "Soda": { size: 2000, serves: 67 }, "White Rum": { size: 750, serves: 17 }, "Non-alcoholic beer": { size: 500, serves: 1 }, "Prosecco 0%": { size: 750, serves: 5 }, "Lime Juice": { size: 1000, serves: 45 }, "Simple Syrup": { size: 1000, serves: 67 }, "Elderflower Liqueur": { size: 750, serves: 12.68 }, },
+        phases: { phase1: { name: "Friday Evening Reception", duration: 9, alcoholicRate: 1.11, nonAlcoholicRate: 1, preferences: { women: { "Prosecco": 48, "White Wine": 24, "Mojito": 19, "Aperol Spritz": 9 }, men: { "White Wine": 18, "Mojito": 24, "Beer": 29, "Whiskey and Cola": 29 }, nonDrinkers: { "Non-alcoholic beer": 20, "Prosecco 0%": 10, "Coca Cola": 30, "Soda": 20, "Ginger Ale": 20 } } }, phase2: { name: "Saturday Daytime Grill", duration: 7, alcoholicRate: 1.14, nonAlcoholicRate: 1, preferences: { women: { "Prosecco": 6, "White Wine": 12, "Mojito": 6, "Aperol Spritz": 6, "Beer": 70 }, men: { "White Wine": 6, "Mojito": 6, "Beer": 82, "Whiskey and Cola": 6 }, nonDrinkers: { "Non-alcoholic beer": 30, "Prosecco 0%": 10, "Coca Cola": 30, "Soda": 15, "Ginger Ale": 15 } } }, phase3: { name: "Saturday Evening Party", duration: 9, alcoholicRate: 1.11, nonAlcoholicRate: 1, preferences: { women: { "Prosecco": 48, "White Wine": 24, "Mojito": 19, "Aperol Spritz": 9 }, men: { "White Wine": 18, "Mojito": 24, "Beer": 29, "Whiskey and Cola": 29 }, nonDrinkers: { "Non-alcoholic beer": 20, "Prosecco 0%": 10, "Coca Cola": 30, "Soda": 20, "Ginger Ale": 20 } } } },
+        cocktails: { "Mojito": { "White Rum": 59.15, "Lime Juice": 22.18, "Simple Syrup": 14.79, "Soda": 88.72 }, "Whiskey and Cola": { "Whiskey": 44.36, "Coca Cola": 133.08 }, "Aperol Spritz": { "Prosecco": 90.00, "Aperol": 60.00, "Soda": 30.00 } },
+        bestPractices: [ { title: "Buffering for Unexpected Consumption", content: "It is strongly recommended to add a safety buffer, typically 10-15% extra, to the final calculated quantities for all beverages. This accounts for heavier-than-anticipated drinking, unexpected guests, or accidental spills." }, { title: "Efficient Beverage Management", content: "Consider offering signature cocktails to streamline choices and simplify the bar setup. Purchasing beverages in bulk or cases is often more economical. Ensure sufficient bar staff to maintain quick service." }, { title: "Importance of Quality Ingredients", content: "The quality of ingredients directly impacts the guest experience. Using fresh mixers, high-quality spirits, and appropriate ice can significantly enhance the overall enjoyment of the drinks served." }, { title: "Ice for More Than Just Drinks", content: "The calculated ice is for drinks only. Remember you'll need additional ice for chilling bottles in buckets or coolers. Plan to buy extra ice beyond the calculated amount." } ],
+        // --- NEW: FORMULAS DATA ---
+        formulas: [
+            { title: "1. Guest & Drinker Counts", content: [
+                { text: "The number of guests who drink alcohol is based on a fixed ratio from the source report (10/14 women, 11/14 men). The rest are non-drinkers.", type: "normal"},
+                { text: "Total Drinkers = (Women Drinkers) + (Men Drinkers)", type: "formula" },
+                { text: "Total Non-Drinkers = (Total Guests) - (Total Drinkers)", type: "formula" }
+            ]},
+            { title: "2. Total Drinks Per Event Phase", content: [
+                { text: "Total alcoholic drinks for a phase are based on an hourly consumption rate.", type: "normal"},
+                { text: "Total Alc. Drinks = Total Drinkers × Rate × Duration", type: "formula" },
+                { text: "Non-alcoholic drinks are calculated similarly, with an extra 20% allowance for drinkers (for mixers/hydration) and a bonus volume for non-drinkers.", type: "normal"},
+                { text: "Total Non-Alc. Drinks = (Non-Drinkers × Rate × Dur) + (Drinkers × Rate × Dur × 0.2) + (Bonus Servings)", type: "formula" },
+            ]},
+            { title: "3. Individual Beverage & Ingredient Needs", content: [
+                { text: "The total drinks for a group (e.g., Men) are distributed according to the preference percentages set with the sliders.", type: "normal"},
+                { text: "Drink Servings = Total Group Drinks × (Preference % / 100)", type: "formula" },
+                { text: "For cocktails, this determines servings. For direct drinks (like Beer), it's converted to volume. All volumes are summed up.", type: "normal"},
+                { text: "Ingredient Volume (ml) = Σ (Servings × ml per Serving)", type: "formula" },
+                { text: "Finally, the total required volume for each ingredient is divided by its bottle size to determine how many units to buy.", type: "normal"},
+                { text: "Bottles to Buy = CEIL(Total Volume / Bottle Size)", type: "formula" }
+            ]},
+            { title: "4. Ice Calculation", content: [
+                { text: "A common rule of thumb is used for ice: approximately 1 pound (0.45kg) per person if only for drinks. We simplify this based on total drinks.", type: "normal"},
+                { text: "Ice (kg) = Total Drinks (All Types) × 0.25", type: "formula" },
+            ]},
+        ]
+    };
+}
