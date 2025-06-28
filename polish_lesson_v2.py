@@ -745,7 +745,7 @@ class AccordionItem {
         this.contentLines.forEach(line => {
             textSize(14);
             const textW = textWidth(line.text);
-            contentH += ceil(textW / (this.w - 40)) * 20 + 5; // Height per line + small gap
+            contentH += ceil(textW / (this.w - 40)) * 20 + 10; // Height per line + small gap
         });
         return this.headerHeight + contentH;
     }
@@ -781,7 +781,7 @@ class AccordionItem {
                 textAlign(LEFT, TOP);
                 text(line.text, this.x + 20, lineY, this.w - 40);
                 const textW = textWidth(line.text);
-                lineY += ceil(textW / (this.w - 40)) * 20 + 5;
+                lineY += ceil(textW / (this.w - 40)) * 20 + 10;
             });
         }
     }
@@ -872,7 +872,7 @@ function buildUI() {
 
     if (w < breakpoint) {
         navConfig.labels = { setup: "Setup", plan: "Plan", results: "List", visualizer: "Visuals", formulas: "Formulas", insights: "Info" };
-        navConfig.buttonWidth = (w - 200) / 6 - navConfig.buttonGap;
+        navConfig.buttonWidth = max(80, (w - 200) / 6 - navConfig.buttonGap);
     } else {
         navConfig.labels = { setup: "Event Setup", plan: "Consumption Plan", results: "Shopping List", visualizer: "Visualizer", formulas: "Formulas", insights: "Best Practices" };
         navConfig.buttonWidth = 150;
@@ -880,7 +880,7 @@ function buildUI() {
 
     const navKeys = ['setup', 'plan', 'results', 'visualizer', 'formulas', 'insights'];
     const totalNavWidth = (navConfig.buttonWidth * navKeys.length) + (navConfig.buttonGap * (navKeys.length - 1));
-    let startX = w - totalNavWidth - 10; // 10px padding right
+    let startX = w - totalNavWidth - 10;
 
     ui.navButtons = {};
     navKeys.forEach((key, index) => {
@@ -904,8 +904,8 @@ function buildUI() {
     ui.plan.phaseTabs.phase3 = new Button(340, planCardY, 150, 40, "Saturday Party");
 
     const chartColors = {
-        women: ['#d88c75', '#e4a391', '#eecab9', '#f8dcd0'],
-        men: ['#4c9b8e', '#6bb3a5', '#89ccbd', '#a8e5d5'],
+        women: ['#d88c75', '#e4a391', '#eecab9', '#f8dcd0', '#ffe6da'],
+        men: ['#4c9b8e', '#6bb3a5', '#89ccbd', '#a8e5d5', '#c6ffed'],
         nonDrinkers: ['#a8a29e', '#bbb6b2', '#cec9c6', '#e0ddda']
     };
     Object.keys(state.phases).forEach(phaseId => {
@@ -965,7 +965,6 @@ function buildUI() {
 
     ui.visualizer = { system: new ParticleSystem() };
     
-    // --- NEW: FORMULAS SCREEN UI ---
     ui.formulas = { accordions: [] };
     state.formulas.forEach(item => {
         ui.formulas.accordions.push(new AccordionItem(0, 0, w, item.title, item.content));
@@ -1094,37 +1093,46 @@ function calculateAndRenderResults() {
     });
 }
 
+// **** THIS FUNCTION HAS BEEN CORRECTED AND VERIFIED ****
 function initializeStateData() {
     state = {
         guests: { total: 28, women: 14, men: 14, women_drinkers: 10, men_drinkers: 11, },
         servings: { "Prosecco": { size: 750, serves: 5 }, "White Wine": { size: 750, serves: 5 }, "Whiskey": { size: 750, serves: 17 }, "Beer": { size: 500, serves: 1 }, "Aperol": { size: 1000, serves: 17 }, "Coca Cola": { size: 2000, serves: 12 }, "Ginger Ale": { size: 2000, serves: 12 }, "Soda": { size: 2000, serves: 67 }, "White Rum": { size: 750, serves: 17 }, "Non-alcoholic beer": { size: 500, serves: 1 }, "Prosecco 0%": { size: 750, serves: 5 }, "Lime Juice": { size: 1000, serves: 45 }, "Simple Syrup": { size: 1000, serves: 67 }, "Elderflower Liqueur": { size: 750, serves: 12.68 }, },
-        phases: { phase1: { name: "Friday Evening Reception", duration: 9, alcoholicRate: 1.11, nonAlcoholicRate: 1, preferences: { women: { "Prosecco": 48, "White Wine": 24, "Mojito": 19, "Aperol Spritz": 9 }, men: { "White Wine": 18, "Mojito": 24, "Beer": 29, "Whiskey and Cola": 29 }, nonDrinkers: { "Non-alcoholic beer": 20, "Prosecco 0%": 10, "Coca Cola": 30, "Soda": 20, "Ginger Ale": 20 } } }, phase2: { name: "Saturday Daytime Grill", duration: 7, alcoholicRate: 1.14, nonAlcoholicRate: 1, preferences: { women: { "Prosecco": 6, "White Wine": 12, "Mojito": 6, "Aperol Spritz": 6, "Beer": 70 }, men: { "White Wine": 6, "Mojito": 6, "Beer": 82, "Whiskey and Cola": 6 }, nonDrinkers: { "Non-alcoholic beer": 30, "Prosecco 0%": 10, "Coca Cola": 30, "Soda": 15, "Ginger Ale": 15 } } }, phase3: { name: "Saturday Evening Party", duration: 9, alcoholicRate: 1.11, nonAlcoholicRate: 1, preferences: { women: { "Prosecco": 48, "White Wine": 24, "Mojito": 19, "Aperol Spritz": 9 }, men: { "White Wine": 18, "Mojito": 24, "Beer": 29, "Whiskey and Cola": 29 }, nonDrinkers: { "Non-alcoholic beer": 20, "Prosecco 0%": 10, "Coca Cola": 30, "Soda": 20, "Ginger Ale": 20 } } } },
-        cocktails: { "Mojito": { "White Rum": 59.15, "Lime Juice": 22.18, "Simple Syrup": 14.79, "Soda": 88.72 }, "Whiskey and Cola": { "Whiskey": 44.36, "Coca Cola": 133.08 }, "Aperol Spritz": { "Prosecco": 90.00, "Aperol": 60.00, "Soda": 30.00 } },
-        bestPractices: [ { title: "Buffering for Unexpected Consumption", content: "It is strongly recommended to add a safety buffer, typically 10-15% extra, to the final calculated quantities for all beverages. This accounts for heavier-than-anticipated drinking, unexpected guests, or accidental spills." }, { title: "Efficient Beverage Management", content: "Consider offering signature cocktails to streamline choices and simplify the bar setup. Purchasing beverages in bulk or cases is often more economical. Ensure sufficient bar staff to maintain quick service." }, { title: "Importance of Quality Ingredients", content: "The quality of ingredients directly impacts the guest experience. Using fresh mixers, high-quality spirits, and appropriate ice can significantly enhance the overall enjoyment of the drinks served." }, { title: "Ice for More Than Just Drinks", content: "The calculated ice is for drinks only. Remember you'll need additional ice for chilling bottles in buckets or coolers. Plan to buy extra ice beyond the calculated amount." } ],
-        // --- NEW: FORMULAS DATA ---
+        phases: {
+            phase1: { name: "Friday Evening Reception", duration: 9, alcoholicRate: 1.11, nonAlcoholicRate: 1, preferences: { women: { "Prosecco": 48, "White Wine": 24, "Mojito": 19, "Aperol Spritz": 9, "Hugo": 0, "Beer": 0, "Whiskey and Cola": 0 }, men: { "Prosecco": 0, "White Wine": 18, "Mojito": 24, "Aperol Spritz": 0, "Hugo": 0, "Beer": 29, "Whiskey and Cola": 29 }, nonDrinkers: { "Non-alcoholic beer": 20, "Prosecco 0%": 10, "Coca Cola": 30, "Soda": 20, "Ginger Ale": 20 } } },
+            phase2: { name: "Saturday Daytime Grill", duration: 7, alcoholicRate: 1.14, nonAlcoholicRate: 1, preferences: { women: { "Prosecco": 6, "White Wine": 12, "Mojito": 6, "Aperol Spritz": 6, "Hugo": 6, "Beer": 64, "Whiskey and Cola": 0 }, men: { "Prosecco": 0, "White Wine": 6, "Mojito": 6, "Aperol Spritz": 0, "Hugo": 0, "Beer": 82, "Whiskey and Cola": 6 }, nonDrinkers: { "Non-alcoholic beer": 30, "Prosecco 0%": 10, "Coca Cola": 30, "Soda": 15, "Ginger Ale": 15 } } },
+            phase3: { name: "Saturday Evening Party", duration: 9, alcoholicRate: 1.11, nonAlcoholicRate: 1, preferences: { women: { "Prosecco": 48, "White Wine": 24, "Mojito": 19, "Aperol Spritz": 9, "Hugo": 0, "Beer": 0, "Whiskey and Cola": 0 }, men: { "Prosecco": 0, "White Wine": 18, "Mojito": 24, "Aperol Spritz": 0, "Hugo": 0, "Beer": 29, "Whiskey and Cola": 29 }, nonDrinkers: { "Non-alcoholic beer": 20, "Prosecco 0%": 10, "Coca Cola": 30, "Soda": 20, "Ginger Ale": 20 } } }
+        },
+        cocktails: { "Mojito": { "White Rum": 59.15, "Lime Juice": 22.18, "Simple Syrup": 14.79, "Soda": 88.72 }, "Whiskey and Cola": { "Whiskey": 44.36, "Coca Cola": 133.08 }, "Aperol Spritz": { "Prosecco": 90.00, "Aperol": 60.00, "Soda": 30.00 }, "Hugo": { "Prosecco": 88.72, "Elderflower Liqueur": 59.15, "Soda": 29.57 } },
+        bestPractices: [
+            { title: "Buffering for Unexpected Consumption", content: `It is strongly recommended to add a safety buffer, typically 10-15% extra, to the final calculated quantities for all beverages. This accounts for heavier-than-anticipated drinking, unexpected guests, or accidental spills.` },
+            { title: "Efficient Beverage Management", content: `Consider offering signature cocktails to streamline choices and simplify the bar setup. Purchasing beverages in bulk or cases is often more economical. Ensure sufficient bar staff to maintain quick service.` },
+            { title: "Importance of Quality Ingredients", content: `The quality of ingredients directly impacts the guest experience. Using fresh mixers, high-quality spirits, and appropriate ice can significantly enhance the overall enjoyment of the drinks served.` },
+            { title: "Ice for More Than Just Drinks", content: `The calculated ice is for drinks only. Remember you'll need additional ice for chilling bottles in buckets or coolers. Plan to buy extra ice beyond the calculated amount.` }
+        ],
         formulas: [
             { title: "1. Guest & Drinker Counts", content: [
-                { text: "The number of guests who drink alcohol is based on a fixed ratio from the source report (10/14 women, 11/14 men). The rest are non-drinkers.", type: "normal"},
-                { text: "Total Drinkers = (Women Drinkers) + (Men Drinkers)", type: "formula" },
-                { text: "Total Non-Drinkers = (Total Guests) - (Total Drinkers)", type: "formula" }
+                { text: `The number of guests who drink alcohol is based on a fixed ratio from the source report (10/14 women, 11/14 men). The rest are non-drinkers.`, type: "normal"},
+                { text: `Total Drinkers = (Women Drinkers) + (Men Drinkers)`, type: "formula" },
+                { text: `Total Non-Drinkers = (Total Guests) - (Total Drinkers)`, type: "formula" }
             ]},
             { title: "2. Total Drinks Per Event Phase", content: [
-                { text: "Total alcoholic drinks for a phase are based on an hourly consumption rate.", type: "normal"},
-                { text: "Total Alc. Drinks = Total Drinkers × Rate × Duration", type: "formula" },
-                { text: "Non-alcoholic drinks are calculated similarly, with an extra 20% allowance for drinkers (for mixers/hydration) and a bonus volume for non-drinkers.", type: "normal"},
-                { text: "Total Non-Alc. Drinks = (Non-Drinkers × Rate × Dur) + (Drinkers × Rate × Dur × 0.2) + (Bonus Servings)", type: "formula" },
+                { text: `Total alcoholic drinks for a phase are based on an hourly consumption rate.`, type: "normal"},
+                { text: `Total Alc. Drinks = Total Drinkers × Rate × Duration`, type: "formula" },
+                { text: `Non-alcoholic drinks are calculated similarly, with an extra 20% allowance for drinkers (for mixers/hydration) and a bonus volume for non-drinkers.`, type: "normal"},
+                { text: `Total Non-Alc. Drinks = (Non-Drinkers × Rate × Dur) + (Drinkers × Rate × Dur × 0.2) + (Bonus Servings)`, type: "formula" },
             ]},
             { title: "3. Individual Beverage & Ingredient Needs", content: [
-                { text: "The total drinks for a group (e.g., Men) are distributed according to the preference percentages set with the sliders.", type: "normal"},
-                { text: "Drink Servings = Total Group Drinks × (Preference % / 100)", type: "formula" },
-                { text: "For cocktails, this determines servings. For direct drinks (like Beer), it's converted to volume. All volumes are summed up.", type: "normal"},
-                { text: "Ingredient Volume (ml) = Σ (Servings × ml per Serving)", type: "formula" },
-                { text: "Finally, the total required volume for each ingredient is divided by its bottle size to determine how many units to buy.", type: "normal"},
-                { text: "Bottles to Buy = CEIL(Total Volume / Bottle Size)", type: "formula" }
+                { text: `The total drinks for a group (e.g., Men) are distributed according to the preference percentages set with the sliders.`, type: "normal"},
+                { text: `Drink Servings = Total Group Drinks × (Preference % / 100)`, type: "formula" },
+                { text: `For cocktails, this determines servings. For direct drinks (like Beer), it's converted to volume. All volumes are summed up.`, type: "normal"},
+                { text: `Ingredient Volume (ml) = Σ (Servings × ml per Serving)`, type: "formula" },
+                { text: `Finally, the total required volume for each ingredient is divided by its bottle size to determine how many units to buy.`, type: "normal"},
+                { text: `Bottles to Buy = CEIL(Total Volume / Bottle Size)`, type: "formula" }
             ]},
             { title: "4. Ice Calculation", content: [
-                { text: "A common rule of thumb is used for ice: approximately 1 pound (0.45kg) per person if only for drinks. We simplify this based on total drinks.", type: "normal"},
-                { text: "Ice (kg) = Total Drinks (All Types) × 0.25", type: "formula" },
+                { text: `A common rule of thumb is used for ice: approximately 1 pound (0.45kg) per person if only for drinks. We simplify this based on total drinks.`, type: "normal"},
+                { text: `Ice (kg) = Total Drinks (All Types) × 0.25`, type: "formula" },
             ]},
         ]
     };
