@@ -9,13 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
     <!-- Chosen Palette: Warm Celebration -->
     <!-- Application Structure Plan: The application is designed as a single-page, task-oriented dashboard. Instead of a linear report format, the structure is divided into four logical, navigable sections: 'Event Setup' (for core inputs like guest count), 'Consumption Plan' (for interactive adjustment of beverage preferences via sliders and charts), 'Shopping List' (for the final, calculated output), 'Dynamic Visualizer' (new p5.js component), and 'Best Practices' (for contextual advice). This structure was chosen to transform the static report into an active tool, guiding the user from input to output. The p5.js integration offers a unique, dynamic visual feedback mechanism. -->
-    <!-- Visualization & Content Choices: 
-        - Report Info: Guest Demographics -> Goal: Inform/Interact -> Viz: HTML Sliders -> Justification: Allows users to easily modify core numbers and see immediate feedback with native HTML controls for best usability.
-        - Report Info: Beverage Preferences (by gender/phase) -> Goal: Compare/Interact -> Viz: Doughnut Charts (Chart.js) paired with HTML Sliders -> Justification: Visually represents proportions, and the linked HTML sliders allow for dynamic, real-time customization, with percentages normalizing to 100%. Chart.js is used for its robust charting capabilities.
-        - Report Info: Overall Event Scale/Consumption -> Goal: Engage/Summarize Visually -> Viz: p5.js Particle System -> Justification: Provides a novel, abstract, and engaging visual representation of the event's magnitude and beverage types, leveraging p5.js for dynamic, programmatically drawn graphics that react to data. This serves as the 'alternative' interactive element without replacing the functional forms.
-        - Report Info: Final Calculated Quantities -> Goal: Inform/Synthesize -> Viz: Dynamic Stat Cards & HTML Table -> Justification: Presents key results (ice, total drinks) as high-impact numbers and detailed shopping lists in clear, structured HTML tables. A new 'Cocktail Summary' section explicitly details total cocktail servings and specific *all* ingredient bottle counts.
-        - Report Info: Best Practices/Tips -> Goal: Inform -> Viz: HTML Accordion -> Justification: Condenses supplementary information into a clean, clickable HTML format.
-        - Library/Method: Core interactions (forms, tables, overall layout) are powered by vanilla JavaScript and Tailwind CSS. Chart.js is used for data visualization charts. p5.js is used for a separate, dynamic visualizer component. This hybrid approach meets all specified requirements for technologies and UI/UX. -->
+    <!-- Visualization & Content Choices: Guest Demographics -> HTML Sliders; Beverage Preferences -> Doughnut Charts + HTML Sliders; Event Scale -> p5.js Particles; Final Quantities -> Stat Cards + HTML Table; Cocktail Summary -> Tables for servings/ingredients; Best Practices -> HTML Accordion. All with JS/Tailwind. NO SVG/Mermaid. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
@@ -422,7 +416,7 @@
                     fullUpdate();
                 });
 
-                // Fixed typo: Changed DOMEElements to DOMElements
+                // Fixed typo from DOMEElements to DOMElements
                 DOMElements.phaseTabs.addEventListener('click', (e) => {
                     if (e.target.tagName === 'BUTTON') {
                         const phaseId = e.target.dataset.phase;
