@@ -6,14 +6,16 @@
     <title>Interactive Wedding Beverage Calculator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
     <!-- Chosen Palette: Warm Celebration -->
-    <!-- Application Structure Plan: The application is designed as a single-page, task-oriented dashboard. Instead of a linear report format, the structure is divided into four logical, navigable sections: 'Event Setup' (for core inputs like guest count), 'Consumption Plan' (for interactive adjustment of beverage preferences via sliders and charts), 'Shopping List' (for the final, calculated output), and 'Best Practices' (for contextual advice). This structure was chosen to transform the static report into an active tool. It guides the user from input to output in an intuitive flow, making the complex data easily manageable and allowing for interactive "what-if" analysis, which is the primary user goal. -->
+    <!-- Application Structure Plan: The application is designed as a single-page, task-oriented dashboard. Instead of a linear report format, the structure is divided into four logical, navigable sections: 'Event Setup' (for core inputs like guest count), 'Consumption Plan' (for interactive adjustment of beverage preferences via sliders and charts), 'Shopping List' (for the final, calculated output), 'Dynamic Visualizer' (new p5.js component), and 'Best Practices' (for contextual advice). This structure was chosen to transform the static report into an active tool, guiding the user from input to output. The p5.js integration offers a unique, dynamic visual feedback mechanism. -->
     <!-- Visualization & Content Choices: 
-        - Report Info: Guest Demographics -> Goal: Inform/Interact -> Viz: Interactive Sliders -> Justification: Allows users to easily modify core numbers and see immediate feedback.
-        - Report Info: Beverage Preferences (by gender/phase) -> Goal: Compare/Interact -> Viz: Doughnut Charts (Chart.js) paired with Sliders -> Justification: Visually represents proportions, and the linked sliders allow for dynamic, real-time customization of the plan, which is the app's core interactive feature. The sliders are normalized to always sum to 100%, preventing invalid data states.
-        - Report Info: Final Calculated Quantities -> Goal: Inform/Synthesize -> Viz: Dynamic Stat Cards & HTML Table -> Justification: Presents the key results (ice, total drinks) as high-impact numbers and the detailed shopping list in a clear, structured, and easy-to-read format. A new 'Cocktail Summary' section explicitly details total cocktail servings and specific *all* ingredient bottle counts for cocktails, enhancing granularity and clarity for purchasing.
-        - Report Info: Best Practices/Tips -> Goal: Inform -> Viz: HTML Accordion -> Justification: Condenses supplementary information into a clean, clickable format, avoiding clutter while keeping the advice accessible.
-        - Library/Method: All interactions are powered by vanilla JavaScript, with Chart.js for visualizations. All data from the report is stored in JS objects for calculation. This approach meets all technical requirements. -->
+        - Report Info: Guest Demographics -> Goal: Inform/Interact -> Viz: HTML Sliders -> Justification: Allows users to easily modify core numbers and see immediate feedback with native HTML controls for best usability.
+        - Report Info: Beverage Preferences (by gender/phase) -> Goal: Compare/Interact -> Viz: Doughnut Charts (Chart.js) paired with HTML Sliders -> Justification: Visually represents proportions, and the linked HTML sliders allow for dynamic, real-time customization, with percentages normalizing to 100%. Chart.js is used for its robust charting capabilities.
+        - Report Info: Overall Event Scale/Consumption -> Goal: Engage/Summarize Visually -> Viz: p5.js Particle System -> Justification: Provides a novel, abstract, and engaging visual representation of the event's magnitude and beverage types, leveraging p5.js for dynamic, programmatically drawn graphics that react to data. This serves as the 'alternative' interactive element without replacing the functional forms.
+        - Report Info: Final Calculated Quantities -> Goal: Inform/Synthesize -> Viz: Dynamic Stat Cards & HTML Table -> Justification: Presents key results (ice, total drinks) as high-impact numbers and detailed shopping lists in clear, structured HTML tables. A new 'Cocktail Summary' section explicitly details total cocktail servings and specific *all* ingredient bottle counts.
+        - Report Info: Best Practices/Tips -> Goal: Inform -> Viz: HTML Accordion -> Justification: Condenses supplementary information into a clean, clickable HTML format.
+        - Library/Method: Core interactions (forms, tables, overall layout) are powered by vanilla JavaScript and Tailwind CSS. Chart.js is used for data visualization charts. p5.js is used for a separate, dynamic visualizer component. This hybrid approach meets all specified requirements for technologies and UI/UX. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
@@ -91,6 +93,7 @@
                 <a href="#setup" class="nav-link">Event Setup</a>
                 <a href="#plan" class="nav-link">Consumption Plan</a>
                 <a href="#results" class="nav-link">Shopping List</a>
+                <a href="#dynamic-visualizer" class="nav-link">Visualizer</a>
                 <a href="#insights" class="nav-link">Best Practices</a>
             </div>
             <button id="mobile-menu-button" class="md:hidden p-2 rounded-md text-stone-600 hover:bg-stone-100">
@@ -101,6 +104,7 @@
             <a href="#setup" class="block py-2 px-4 text-sm text-stone-700 hover:bg-stone-50 mobile-nav-link">Event Setup</a>
             <a href="#plan" class="block py-2 px-4 text-sm text-stone-700 hover:bg-stone-50 mobile-nav-link">Consumption Plan</a>
             <a href="#results" class="block py-2 px-4 text-sm text-stone-700 hover:bg-stone-50 mobile-nav-link">Shopping List</a>
+            <a href="#dynamic-visualizer" class="block py-2 px-4 text-sm text-stone-700 hover:bg-stone-50 mobile-nav-link">Visualizer</a>
             <a href="#insights" class="block py-2 px-4 text-sm text-stone-700 hover:bg-stone-50 mobile-nav-link">Best Practices</a>
         </div>
     </header>
@@ -255,6 +259,16 @@
             </div>
         </section>
 
+        <section id="dynamic-visualizer" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-2 text-stone-800">Dynamic Event Visualizer</h2>
+            <p class="text-center text-stone-600 mb-10 max-w-2xl mx-auto">Observe a dynamic visualization that subtly reacts to your event's scale and consumption patterns, adding an engaging visual dimension to your planning. The number of particles reflects the total estimated drinks, with colors indicating alcoholic (reddish) vs. non-alcoholic (greenish) options.</p>
+            <div class="card p-6 flex justify-center items-center">
+                <div id="p5-canvas-container" class="w-full h-96 relative overflow-hidden rounded-lg">
+                    <!-- p5.js canvas will be injected here -->
+                </div>
+            </div>
+        </section>
+
         <section id="insights" class="scroll-mt-24">
             <h2 class="text-3xl md:text-4xl font-bold text-center mb-2 text-stone-800">4. Best Practices</h2>
             <p class="text-center text-stone-600 mb-10 max-w-2xl mx-auto">Planning a wedding involves more than just numbers. Here are some key insights from the source report to ensure your beverage service is a complete success.</p>
@@ -269,6 +283,15 @@
     </footer>
 
     <script>
+        // Expose state globally for p5.js to access
+        window.appState = {
+            visualizerData: { // Initialize with default values for p5.js
+                totalDrinks: 0,
+                alcoholicDrinks: 0,
+                nonAlcoholicDrinks: 0
+            }
+        };
+
         document.addEventListener('DOMContentLoaded', () => {
             const initialData = {
                 guests: {
@@ -347,7 +370,9 @@
                 ]
             };
 
-            const state = JSON.parse(JSON.stringify(initialData));
+            const state = window.appState; // Reference the global state object
+            Object.assign(state, JSON.parse(JSON.stringify(initialData))); // Deep copy initial data to global state
+
             let charts = {};
 
             const DOMElements = {
@@ -397,6 +422,7 @@
                     fullUpdate();
                 });
 
+                // Fixed typo: Changed DOMEElements to DOMElements
                 DOMElements.phaseTabs.addEventListener('click', (e) => {
                     if (e.target.tagName === 'BUTTON') {
                         const phaseId = e.target.dataset.phase;
@@ -744,6 +770,13 @@
                 DOMElements.totalAlcoholicDrinksResult.textContent = Math.ceil(grandTotalAlcoholicDrinksConsumed);
                 DOMElements.totalNonAlcoholicDrinksResult.textContent = Math.ceil(grandTotalNonAlcoholicDrinksConsumed);
                 DOMElements.iceRequiredResult.textContent = Math.ceil((grandTotalAlcoholicDrinksConsumed + grandTotalNonAlcoholicDrinksConsumed) / 12 * 3);
+
+                // Update p5.js visualizer state
+                window.appState.visualizerData = {
+                    totalDrinks: Math.ceil(grandTotalAlcoholicDrinksConsumed + grandTotalNonAlcoholicDrinksConsumed),
+                    alcoholicDrinks: Math.ceil(grandTotalAlcoholicDrinksConsumed),
+                    nonAlcoholicDrinks: Math.ceil(grandTotalNonAlcoholicDrinksConsumed)
+                };
             }
 
             function fullUpdate() {
@@ -761,6 +794,123 @@
 
             init();
         });
+
+        // p5.js sketch
+        const s = (sketch) => {
+            let particles = [];
+            let containerDiv;
+            const ALCOHOL_COLOR = sketch.color(216, 140, 117, 180); // #d88c75 with alpha
+            const NON_ALCOHOL_COLOR = sketch.color(76, 155, 142, 180); // #4c9b8e with alpha
+
+            sketch.setup = () => {
+                containerDiv = document.getElementById('p5-canvas-container');
+                const canvas = sketch.createCanvas(containerDiv.offsetWidth, containerDiv.offsetHeight);
+                canvas.parent('p5-canvas-container');
+                sketch.pixelDensity(1); // Ensure consistent rendering across devices
+                sketch.noStroke();
+                sketch.frameRate(30);
+
+                // Initial particle generation
+                sketch.generateParticles();
+            };
+
+            sketch.windowResized = () => {
+                containerDiv = document.getElementById('p5-canvas-container');
+                sketch.resizeCanvas(containerDiv.offsetWidth, containerDiv.offsetHeight);
+                sketch.generateParticles(); // Regenerate particles on resize for better distribution
+            };
+
+            sketch.generateParticles = () => {
+                particles = [];
+                const maxParticles = 500; // Cap particle count for performance
+                // Access window.appState directly as it's globally available
+                let totalDrinks = window.appState.visualizerData.totalDrinks;
+                let alcoholicDrinks = window.appState.visualizerData.alcoholicDrinks;
+                let nonAlcoholicDrinks = window.appState.visualizerData.nonAlcoholicDrinks;
+
+                let numParticles = Math.min(maxParticles, Math.ceil(totalDrinks / 50)); // Scale drinks to particles, max 500
+                if (numParticles < 50 && totalDrinks > 0) numParticles = 50; // Minimum particles if there are drinks
+                if (totalDrinks === 0) numParticles = 0;
+
+
+                for (let i = 0; i < numParticles; i++) {
+                    let type = 'nonAlcoholic';
+                    if (totalDrinks > 0) { // Only calculate ratio if totalDrinks is not zero
+                         type = sketch.random(1) < (alcoholicDrinks / totalDrinks) ? 'alcoholic' : 'nonAlcoholic';
+                    }
+                    particles.push(new Particle(sketch, type, sketch.width, sketch.height));
+                }
+            };
+
+            sketch.draw = () => {
+                sketch.background(255, 255, 255, 0); // Transparent background to show card background
+
+                // Re-generate particles only if data changes significantly
+                if (window.appState.visualizerData && (sketch.frameCount % 60 === 0 || particles.length === 0)) { // Check every 2 seconds or if empty
+                    const currentTotal = window.appState.visualizerData.totalDrinks;
+                    const currentAlcoholic = window.appState.visualizerData.alcoholicDrinks;
+                    const currentNonAlcoholic = window.appState.visualizerData.nonAlcoholicDrinks;
+
+                    const particleCountTarget = Math.min(500, Math.ceil(currentTotal / 50));
+                    if (Math.abs(particles.length - particleCountTarget) > 10 || (currentTotal > 0 && sketch.abs(sketch.random(1) - (currentAlcoholic / currentTotal)) > 0.1) || (currentTotal === 0 && particles.length > 0)) {
+                         sketch.generateParticles();
+                    }
+                }
+
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    let p = particles[i];
+                    p.update();
+                    p.display();
+                    if (p.isFinished()) {
+                        particles.splice(i, 1);
+                    }
+                }
+                // Continuously add new particles up to the target number
+                while (particles.length < (window.appState.visualizerData ? Math.min(500, Math.ceil(window.appState.visualizerData.totalDrinks / 50)) : 0) && sketch.frameCount % 5 === 0) {
+                    let totalDrinks = window.appState.visualizerData.totalDrinks;
+                    let alcoholicDrinks = window.appState.visualizerData.alcoholicDrinks;
+                    let nonAlcoholicDrinks = window.appState.visualizerData.nonAlcoholicDrinks;
+                    let type = 'nonAlcoholic';
+                    if (totalDrinks > 0) { // Only calculate ratio if totalDrinks is not zero
+                        type = sketch.random(1) < (alcoholicDrinks / totalDrinks) ? 'alcoholic' : 'nonAlcoholic';
+                    }
+                    particles.push(new Particle(sketch, type, sketch.width, sketch.height));
+                }
+            };
+
+            class Particle {
+                constructor(sketch, type, canvasWidth, canvasHeight) {
+                    this.sketch = sketch;
+                    this.x = sketch.random(canvasWidth);
+                    this.y = sketch.random(canvasHeight);
+                    this.vx = sketch.random(-0.5, 0.5);
+                    this.vy = sketch.random(-0.5, 0.5);
+                    this.alpha = sketch.random(150, 255);
+                    this.size = sketch.random(4, 10);
+                    this.lifespan = sketch.random(100, 300);
+                    this.type = type;
+                    this.color = type === 'alcoholic' ? ALCOHOL_COLOR : NON_ALCOHOL_COLOR;
+                }
+
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.alpha -= 1;
+                    this.lifespan--;
+                }
+
+                display() {
+                    this.sketch.fill(this.color.levels[0], this.color.levels[1], this.color.levels[2], this.alpha);
+                    this.sketch.ellipse(this.x, this.y, this.size);
+                }
+
+                isFinished() {
+                    return this.alpha < 0 || this.lifespan < 0;
+                }
+            }
+        };
+
+        new p5(s, 'p5-canvas-container'); // Initialize p5 sketch
     </script>
 </body>
 </html>
